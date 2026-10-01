@@ -1,0 +1,31 @@
+SHOREBREAK — research and implementation notes
+
+Design: arcade surfing driven by slope, speed and rhythm. A lateral pocket coordinate follows the travelling swell so the player can focus on carving rather than paddling. This is an accessible surfing game, not a full fluid or rigid-body simulation.
+
+Surf mechanics
+- Descending a wave converts gravitational potential into speed; climbing consumes speed. Carving connects these phases. https://annex.exploratorium.edu/the-world/surfing/physics/surfsci2.html
+- Energy-rich region near the curl motivates a soft pocket speed/scoring reward. https://scripps.ucsd.edu/news/waves-sweet-spot-revealed
+- Applied: slope-sensitive acceleration; downhill pumping only; smoothed lean; alternating carve rewards; charge/release aerial near crest; clean versus unbalanced landing; temporary wipeout recovery.
+
+Water and performance
+- Geometric waves and fine normal detail separate large-scale shape from small-scale reflection. https://developer.nvidia.com/gpugems/gpugems/part-i-natural-effects/chapter-1-effective-water-simulation-physical-models
+- Fresnel water reflectance with F0=0.02 and exponent 5, informed by Three.js Water. https://github.com/mrdoob/three.js/blob/dev/examples/jsm/objects/Water.js
+- Applied: shaped travelling heightfield with directional wind waves; identical analytic CPU/GPU surface and derivatives; procedural sky reflection, sun highlights, crest foam and board wake. Heightfield does not create an overhanging barrel or physical underwater refraction.
+- Resolution constrained by pixel budget; mobile starts low; quality adapts after sustained frame-time evidence. https://threejs.org/manual/en/responsive.html
+- One animation loop, fixed 1/60-second physics, pooled particles, no per-frame texture or geometry allocation, HUD at 10 Hz, pause on hidden tab. https://developer.mozilla.org/en-US/docs/Web/API/Window/requestAnimationFrame
+- Low draw counts and no synchronous GPU readback in game loop. https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/WebGL_best_practices
+
+Quality budgets
+Low: 90x90 grid, 0.75 megapixels, DPR <= 1.
+Balanced: 130x130 grid, 1.4 megapixels, DPR <= 1.3.
+High: 180x180 grid, 2.3 megapixels, DPR <= 1.6.
+Gameplay uses the same fixed timestep and water formula at all levels.
+
+Dependencies
+Three.js 0.170.0 (MIT), vendored locally with license; browser loads no remote JavaScript. Optional Google Fonts have system fallbacks.
+
+Validation
+Desktop Chromium: scene renders; ~60 FPS observed in this environment, 33-34 draw calls; carving, charged aerial, clean landing, score/combo, pause freezing time verified by actual session state.
+These figures are observations on the test machine, not guarantees for all devices.
+Additional validation: mobile viewport 393x852 has no horizontal overflow; on-screen steering changes the pocket offset; low tier renders at 393x852 instead of device DPR 3. Numerical checks at 20 points give maximum analytic gradient error 5.05e-9. Non-lip hop grants no aerial combo; lip launch and clean landing grant one. Out-of-pocket wipeout and automatic recovery verified. WebMCP registry is feature-detected, but this test browser does not support document.modelContext, so tool registration could not be verified there.
+A complete 90-second run reached the result dialog at simulation time 90.0167 seconds, persisted the best score, and returned to the menu. Free surf starts with an infinite timer. Verification used desktop Chromium and mobile emulation, not a physical phone.
