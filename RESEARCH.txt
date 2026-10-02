@@ -29,3 +29,20 @@ Desktop Chromium: scene renders; ~60 FPS observed in this environment, 33-34 dra
 These figures are observations on the test machine, not guarantees for all devices.
 Additional validation: mobile viewport 393x852 has no horizontal overflow; on-screen steering changes the pocket offset; low tier renders at 393x852 instead of device DPR 3. Numerical checks at 20 points give maximum analytic gradient error 5.05e-9. Non-lip hop grants no aerial combo; lip launch and clean landing grant one. Out-of-pocket wipeout and automatic recovery verified. WebMCP registry is feature-detected, but this test browser does not support document.modelContext, so tool registration could not be verified there.
 A complete 90-second run reached the result dialog at simulation time 90.0167 seconds, persisted the best score, and returned to the menu. Free surf starts with an infinite timer. Verification used desktop Chromium and mobile emulation, not a physical phone.
+
+VERSION 2 — athlete, professional motion and sea encounters
+
+A real anatomical, continuous MakeHuman-derived skinned human replaces the assembled primitive body. Asset: 52 joints, 28,816 triangles, photo skin on head/hands/feet, authored wetsuit, ~1.12MB, all textures embedded. CC0 provenance is in dist/assets/PROVENANCE.txt; no source motion-capture animations are shipped.
+
+Motion references inspected:
+https://www.surfer.com/how-to/frontside-air-reverse-1
+https://www.redbull.com/int-en/red-bull-airborne-2019-highlights
+https://www.redbull.com/us-en/videos/sessions-lower-trestles-griffin-colapinto-down-the-line
+https://surfhappens.com/how-to-surf/videos/how-to-do-a-frontside-air-reverse-with-lakey-peterson/
+https://ojs.ub.uni-konstanz.de/cpa/article/view/6883/6179
+
+Authored motion follows compression, extension, asymmetric knee tuck/rail grab, spotting the landing, knee absorption and recovery. Runtime two-bone IK keeps the anatomical feet on the board while bending the continuous mesh at joints. This is procedural animation informed by references, not captured motion from those athletes.
+
+Physics uses fixed 120Hz steps with render interpolation. Lateral rail grip has momentum; airborne X/Z velocity is preserved independently of wave motion. Surface orientation samples nose/tail/rails. Lip takeoff speed is tuned for readable gameplay (roughly 3–5m height), not claimed as a measured professional-athlete average. Test launch reached 4.58m with ~1.92s airtime, landed cleanly; 360 launch/landing also verified. Identical control schedules at render rates 30, 60 and 144Hz produced matching positions and speed.
+
+Four original animated sea obstacles: shark, kraken, sea serpent and jellyfish. Encounter warnings appear before contact; jump clearance accounts for board height; collisions reduce speed/reset combo and grant brief recovery immunity. Verified shark collision and a successful jump over the shark in deterministic simulation.

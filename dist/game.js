@@ -1,17 +1,21 @@
 import * as THREE from './vendor/three.module.js';
 import {createOcean,sampleWater} from './water.js';
-import {createSurfer} from './surfer.js';
+import {createSurfer} from './surfer.js?v=2';
+import {FIXED_DT,resetPhysics,advancePhysics,beginWipeout} from './physics.js';
+import {createHazards} from './hazards.js';
 const $=id=>document.getElementById(id),clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),lerp=(a,b,t)=>a+(b-a)*t;
 const isTouch=matchMedia('(pointer:coarse)').matches||navigator.maxTouchPoints>1||innerWidth<700;
 if(isTouch)document.body.classList.add('touch');
 let renderer;
-try{renderer=new THREE.WebGLRenderer({canvas:$('ocean'),antialias:false,alpha:false,powerPreference:'high-performance'});}catch(e){$('loading').hidden=true;$('error').hidden=false;throw e;}
+try{renderer=new THREE.WebGLRenderer({canvas:$('ocean'),antialias:!isTouch,alpha:false,powerPreference:'high-performance'});}catch(e){$('loading').hidden=true;$('error').hidden=false;throw e;}
 renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.13;
 const scene=new THREE.Scene();scene.fog=new THREE.FogExp2(0x91b5b7,.0035);
 const worldUp=new THREE.Vector3(0,1,0);
 const camera=new THREE.PerspectiveCamera(52,innerWidth/innerHeight,.15,12000);
 scene.add(new THREE.HemisphereLight(0xe3f6fc,0x356b69,2.5));const sun=new THREE.DirectionalLight(0xffdda6,3.4);sun.position.set(-40,55,-65);scene.add(sun);
-const ocean=createOcean(scene),surfer=createSurfer(scene),sample={},normal=new THREE.Vector3(),forward=new THREE.Vector3(),right=new THREE.Vector3(),basis=new THREE.Matrix4(),orient=new THREE.Quaternion(),leanQ=new THREE.Quaternion(),zAxis=new THREE.Vector3(0,0,1),cameraTarget=new THREE.Vector3(),lookTarget=new THREE.Vector3(),lookNow=new THREE.Vector3();
+const ocean=createOcean(scene);
+let surfer;try{surfer=await createSurfer(scene);}catch(error){$('loading').hidden=true;$('error').hidden=false;$('error-text').textContent='Không tải được nhân vật 3D. Hãy tải lại trang để trở về biển.';throw error;}
+const hazards=createHazards(scene),sample={},normal=new THREE.Vector3(),forward=new THREE.Vector3(),right=new THREE.Vector3(),basis=new THREE.Matrix4(),orient=new THREE.Quaternion(),leanQ=new THREE.Quaternion(),zAxis=new THREE.Vector3(0,0,1),cameraTarget=new THREE.Vector3(),lookTarget=new THREE.Vector3(),lookNow=new THREE.Vector3();
 // Distant volcanic headlands are actual low-poly geometry, kept to a few draw calls.
 const islands=new THREE.Group();scene.add(islands);
 const islandMat=new THREE.MeshStandardMaterial({color:0x365d5b,roughness:1,flatShading:true});
@@ -26,6 +30,9 @@ const spray=new THREE.Points(particleGeo,particleMat);spray.frustumCulled=false;
 function emitSpray(x,y,z,count,power=1){for(let i=0;i<count;i++){const n=particleCursor++%particleCount,j=n*3;positions[j]=x+(Math.random()-.5)*.6;positions[j+1]=y+.12;positions[j+2]=z+(Math.random()-.5)*.7;velocity[j]=(Math.random()-.5)*5*power;velocity[j+1]=(1.1+Math.random()*2.7)*power;velocity[j+2]=3+Math.random()*4;life[n]=.55+Math.random()*.45;}}
 const controls={left:false,right:false,pump:false,jump:false,brake:false};
 const state={status:'menu',mode:'session',time:0,oceanTime:13,x:0,z:0,offset:0,speed:8,lean:0,steer:0,charge:0,air:false,airY:0,vy:0,airTime:0,wipe:0,score:0,combo:1,comboTime:0,maxCombo:1,maxSpeed:0,landings:0,carve:0,carveDirection:0,lastCarve:0,launchWasLip:false,edgeTime:0,trickTime:0,quality:'auto',tier:1,fps:60};
+resetPhysics(state);
+const renderKeys=['x','y','z','oceanTime','speed','latVel','lean','steer','charge','airTime','airProgress','spinAngle','landingTime','landingImpact','nx','ny','nz','wipe'];
+const previous={},renderState={};function capturePrevious(){for(const key of renderKeys)previous[key]=state[key];}capturePrevious();
 let wasJump=false,accumulator=0,lastTime=0,hudTime=0,measureTime=0,measureFrames=0,slowTime=0,fastTime=0,pausedByDialog=false,frameCount=0,renderScale=1;
 let best=0;try{best=Number(localStorage.getItem('shorebreak-best')||0);const q=localStorage.getItem('shorebreak-quality');if(['auto','low','medium','high'].includes(q))state.quality=q;}catch{}
 const tiers=[{name:'TIẾT KIỆM',pixels:750000,dpr:1,segments:90,detail:0},{name:'CÂN BẰNG',pixels:1400000,dpr:1.3,segments:130,detail:.6},{name:'CAO',pixels:2300000,dpr:1.6,segments:180,detail:1}];
@@ -38,14 +45,14 @@ function initAudio(){if(audioCtx)return;const Ctx=window.AudioContext||window.we
 function setSound(on){soundEnabled=on;initAudio();if(on)audioCtx?.resume();$('sound').classList.toggle('muted',!on);$('sound').setAttribute('aria-label',on?'Tắt âm thanh':'Bật âm thanh');$('sound-icon').textContent=on?'♫':'♪';}
 $('sound').classList.add('muted');
 function splashSound(){if(!soundEnabled||!audioCtx)return;const s=audioCtx.createBufferSource(),g=audioCtx.createGain(),f=audioCtx.createBiquadFilter();s.buffer=noiseBuffer;f.type='highpass';f.frequency.value=650;s.connect(f);f.connect(g);g.connect(audioGain);g.gain.setValueAtTime(.9,audioCtx.currentTime);g.gain.exponentialRampToValueAtTime(.01,audioCtx.currentTime+.6);s.start();s.stop(audioCtx.currentTime+.65);}
-function clearInputs(){for(const k in controls)controls[k]=false;wasJump=false;state.charge=0;document.querySelectorAll('[data-input]').forEach(b=>b.classList.remove('held'));}
+function clearInputs(){for(const k in controls)controls[k]=false;wasJump=false;state.wasJump=false;state.charge=0;document.querySelectorAll('[data-input]').forEach(b=>b.classList.remove('held'));}
 function showTrick(title,sub){$('trick').innerHTML=title+'<small>'+sub+'</small>';$('trick').classList.add('active');state.trickTime=2.2;}
 function reward(base,title,sub){state.combo=Math.min(8,state.combo+1);state.maxCombo=Math.max(state.maxCombo,state.combo);state.comboTime=6;const amount=Math.round(base*state.combo);state.score+=amount;showTrick(title,`+${amount} · ${sub}`);}
-function startGame(){document.activeElement?.blur();document.querySelectorAll('dialog[open]').forEach(d=>d.close());clearInputs();Object.assign(state,{status:'playing',time:0,z:0,offset:0,speed:8,lean:0,steer:0,air:false,airY:0,vy:0,airTime:0,wipe:0,score:0,combo:1,comboTime:0,maxCombo:1,maxSpeed:0,landings:0,carve:0,carveDirection:0,lastCarve:0,launchWasLip:false,edgeTime:0,trickTime:0});life.fill(0);$('welcome').hidden=true;$('welcome-footer').hidden=true;$('wave-note').hidden=true;$('hud').hidden=false;$('touch-controls').hidden=!isTouch;document.body.classList.add('playing');$('mode-label').textContent=state.mode==='free'?'LƯỚT TỰ DO':'PHIÊN LƯỚT';$('trick').classList.remove('active');showTrick('Tìm nhịp của sóng','NGHIÊNG VÁN · XUỐNG SÓNG ĐỂ LẤY ĐÀ');initAudio();if(soundEnabled)audioCtx?.resume();updateHUD();}
+function startGame(){document.activeElement?.blur();document.querySelectorAll('dialog[open]').forEach(d=>d.close());clearInputs();Object.assign(state,{status:'playing',time:0,z:0,offset:0,speed:8,lean:0,steer:0,air:false,airY:0,vy:0,airTime:0,wipe:0,score:0,combo:1,comboTime:0,maxCombo:1,maxSpeed:0,landings:0,carve:0,carveDirection:0,lastCarve:0,launchWasLip:false,edgeTime:0,trickTime:0});resetPhysics(state);capturePrevious();hazards.reset(state);camera.position.set(state.x+1,5.4,state.z+9);lookNow.set(state.x,1.6,state.z-5);life.fill(0);$('welcome').hidden=true;$('welcome-footer').hidden=true;$('wave-note').hidden=true;$('hud').hidden=false;$('touch-controls').hidden=!isTouch;document.body.classList.add('playing');$('mode-label').textContent=state.mode==='free'?'LƯỚT TỰ DO':'PHIÊN LƯỚT';$('trick').classList.remove('active');showTrick('Tìm nhịp của sóng','NGHIÊNG VÁN · XUỐNG SÓNG ĐỂ LẤY ĐÀ');initAudio();if(soundEnabled)audioCtx?.resume();updateHUD();}
 function goHome(){document.querySelectorAll('dialog[open]').forEach(d=>d.close());state.status='menu';clearInputs();$('welcome').hidden=false;$('welcome-footer').hidden=false;$('wave-note').hidden=false;$('hud').hidden=true;$('touch-controls').hidden=true;document.body.classList.remove('playing');}
 function pause(){if(state.status!=='playing')return;state.status='paused';clearInputs();$('pause-dialog').showModal();}
 function resume(){if(state.status!=='paused')return;state.status='playing';$('pause-dialog').close();document.activeElement?.blur();clearInputs();lastTime=performance.now();accumulator=0;}
-function finish(){state.status='finished';clearInputs();best=Math.max(best,Math.round(state.score));try{localStorage.setItem('shorebreak-best',String(best));}catch{}$('result-score').textContent=Math.round(state.score).toLocaleString('vi-VN');$('result-speed').textContent=Math.round(state.maxSpeed*3.6);$('result-air').textContent=state.landings;$('result-combo').textContent='×'+state.maxCombo;$('best-score').textContent='Kỷ lục trên thiết bị này: '+best.toLocaleString('vi-VN');$('result-title').textContent=state.score>6000?'Bạn và sóng, cùng một nhịp.':'Mỗi con sóng, một khởi đầu.';$('result-dialog').showModal();}
+function finish(){state.status='finished';clearInputs();best=Math.max(best,Math.round(state.score));try{localStorage.setItem('shorebreak-best',String(best));}catch{}$('result-score').textContent=Math.round(state.score).toLocaleString('vi-VN');$('result-speed').textContent=Math.round(state.maxSpeed*3.6);$('result-air').textContent=state.landings;$('result-combo').textContent='×'+state.maxCombo;$('result-dodged').textContent=state.obstaclesDodged;$('result-height').textContent=state.maxAir.toFixed(1)+' m';$('best-score').textContent='Kỷ lục trên thiết bị này: '+best.toLocaleString('vi-VN');$('result-title').textContent=state.score>6000?'Bạn và sóng, cùng một nhịp.':'Mỗi con sóng, một khởi đầu.';$('result-dialog').showModal();}
 function openDialog(id){if(state.status==='playing'){state.status='paused';clearInputs();pausedByDialog=true;}$(id).showModal();}
 $('start').onclick=startGame;$('again').onclick=startGame;$('restart').onclick=startGame;$('resume').onclick=resume;$('home').onclick=goHome;$('result-home').onclick=goHome;
 document.querySelector('.brand').onclick=e=>{e.preventDefault();if(state.status==='playing')pause();else if(state.status!=='menu')goHome();};
@@ -59,71 +66,63 @@ window.addEventListener('keydown',e=>{if(e.target.matches?.('input,select')&&e.c
 window.addEventListener('keyup',e=>{if(keyMap[e.code]){controls[keyMap[e.code]]=false;if(state.status==='playing')e.preventDefault();}});
 for(const button of document.querySelectorAll('[data-input]')){button.addEventListener('pointerdown',e=>{e.preventDefault();if(state.status!=='playing')return;button.setPointerCapture(e.pointerId);controls[button.dataset.input]=true;button.classList.add('held');});const release=()=>{controls[button.dataset.input]=false;button.classList.remove('held');};button.addEventListener('pointerup',release);button.addEventListener('pointercancel',release);button.addEventListener('lostpointercapture',release);}
 window.addEventListener('blur',()=>{if(state.status==='playing')pause();clearInputs();});document.addEventListener('visibilitychange',()=>{if(document.hidden){if(state.status==='playing')pause();clearInputs();audioCtx?.suspend();}else{lastTime=performance.now();accumulator=0;if(soundEnabled)audioCtx?.resume();}});
-function wipeout(){state.wipe=1.8;state.air=false;state.speed=4;state.combo=1;state.comboTime=0;state.edgeTime=0;state.charge=0;state.carve=0;state.carveDirection=0;state.lastCarve=0;emitSpray(state.x,sample.h,state.z,55,2);splashSound();showTrick('Lại một con sóng','THẢ HƯỚNG TRƯỚC KHI TIẾP NƯỚC');}
+function handlePhysicsEvent(type,data={}){
+ if(type==='launch'){emitSpray(state.x,state.y-.15,state.z,24,1.5);showTrick(data.spin?'Air reverse 360°':'Frontside air',data.lip?'KÉO GỐI · GIỮ RAIL · THẢ HƯỚNG ĐỂ ĐÁP':'LẤY THÊM ĐÀ Ở ĐỈNH SÓNG ĐỂ BAY CAO');}
+ if(type==='landing'){emitSpray(state.x,state.y-.15,state.z,42,1.2+data.impact*.03);splashSound();if(data.lip){state.landings++;reward(data.spin?420:data.clean?280:120,data.clean?(data.spin?'360° hoàn hảo':'Tiếp nước hoàn hảo'):'Đã tiếp nước',data.height.toFixed(1)+' m · '+(data.clean?'HẤP THỤ LỰC BẰNG GỐI':'GIỮ THẲNG VÁN KHI ĐÁP'));}else showTrick('Bật sóng',data.height.toFixed(1)+' m · LÊN MẶT SÓNG ĐỂ THÊM ĐỘ CAO');}
+ if(type==='carve')reward(data.cutback?120:90,data.cutback?'Cutback':'Bottom turn','ĐỔI HƯỚNG · GIỮ ĐÀ');
+ if(type==='wipeout'||type==='obstacle-hit'){if(type==='obstacle-hit')beginWipeout(state);emitSpray(state.x,state.y,state.z,65,2);splashSound();showTrick(type==='obstacle-hit'?data.name:'Mất thăng bằng',type==='obstacle-hit'?'VA CHẠM · TRỞ LẠI ĐƯỜNG LƯỚT':'NÉN GỐI VÀ GIỮ VÁN THẲNG KHI ĐÁP');}
+ if(type==='recover')showTrick('Bắt lại nhịp sóng','GIỮ ĐÀ · QUAN SÁT PHÍA TRƯỚC');
+ if(type==='obstacle-clear'){const points=data.air?240:data.near?160:100;state.score+=points*state.combo;if(data.air||data.near)showTrick(data.air?'Bay qua sinh vật':'Né sát mép','+'+(points*state.combo)+' · '+data.name);}
+}
 function step(dt){
  if(state.status==='paused'||state.status==='finished')return;
  state.oceanTime+=dt;
- if(state.status==='menu'){state.z-=dt*2.8;state.offset=Math.sin(state.oceanTime*.18)*1.1;state.speed=6;state.steer=Math.sin(state.oceanTime*.4)*.17;state.lean=lerp(state.lean,state.steer,.05);}
- else {
+ if(state.status==='menu'){
+  state.z-=dt*3.4;state.offset=Math.sin(state.oceanTime*.2)*1.2;state.speed=7;state.steer=Math.sin(state.oceanTime*.4)*.16;state.lean=lerp(state.lean,state.steer,1-Math.exp(-5*dt));state.x=(state.oceanTime*.72-state.z*.035+.4)/.23+state.offset;sampleWater(state.x,state.z,state.oceanTime,sample);state.y=sample.h+.14;const n=1/Math.hypot(sample.dx,1,sample.dz);state.nx=-sample.dx*n;state.ny=n;state.nz=-sample.dz*n;
+ }else{
   state.time+=dt;if(state.mode==='session'&&state.time>=90){finish();return;}
   if(state.trickTime>0){state.trickTime-=dt;if(state.trickTime<=0)$('trick').classList.remove('active');}
   if(state.comboTime>0){state.comboTime-=dt;if(state.comboTime<=0)state.combo=1;}
-  const input=(controls.right?1:0)-(controls.left?1:0);state.steer=lerp(state.steer,input,1-Math.exp(-7*dt));state.lean=lerp(state.lean,state.steer,1-Math.exp(-6*dt));
-  if(state.wipe>0){state.wipe-=dt;state.offset=lerp(state.offset,0,dt*2.5);state.lean*=.97;state.z-=state.speed*dt;if(state.wipe<=0){state.speed=7;showTrick('Trở lại đường lướt','HÃY CARVE THÀNH ĐƯỜNG CHỮ S');}}
-  else {
-   const phase=.4+state.offset*.23,gradient=.23*(2.05*Math.cos(phase)+.88*Math.cos(2*phase));
-   const lateral=state.steer*state.speed*.55;state.offset+=lateral*dt;state.offset=clamp(state.offset,-15,15);
-   const downhill=-gradient*lateral;const pocket=Math.exp(-Math.pow((phase-.55)/1.4,2));
-   let acceleration=1.6+pocket*1.2-state.speed*state.speed*.032+downhill*.34-Math.abs(state.steer)*.14;
-   if(controls.pump&&!state.air&&downhill>.35)acceleration+=Math.min(2.8,downhill*.9)*( .7+.3*Math.sin(state.time*7));
-   if(controls.brake)acceleration-=3.5;
-   if(!state.air)state.speed=clamp(state.speed+acceleration*dt,4.1,16.5);state.z-=state.speed*dt;
-   if(Math.abs(state.offset)>12.5)state.edgeTime+=dt;else state.edgeTime=Math.max(0,state.edgeTime-dt*2);
-   if(state.edgeTime>2.8)wipeout();
-   if(!state.air){state.score+=(8+state.speed*1.2)*pocket*state.combo*dt;
-    if(Math.abs(state.steer)>.4&&pocket>.25){const sign=Math.sign(state.steer);if(sign!==state.carveDirection){state.carve=0;state.carveDirection=sign;}state.carve+=Math.abs(lateral)*dt;if(state.carve>4.7&&sign!==state.lastCarve){reward(90,state.lastCarve===0?'Carving':'Cutback','ĐƯỜNG LƯỚT MƯỢT');state.carve=0;state.lastCarve=sign;}}
-   }
-   if(controls.jump&&!state.air)state.charge=Math.min(1,state.charge+dt*1.15);
-   if(!controls.jump&&wasJump&&!state.air&&state.charge>.12){const lip=Math.sin(phase)>.65&&state.speed>6.2;state.launchWasLip=lip;state.air=true;state.airTime=0;state.airY=sample.h+.17;state.vy=lip?4.7+state.charge*2.5:2.1+state.charge*1.6;state.charge=0;if(lip)showTrick('Rời mặt sóng','THẢ HƯỚNG · CĂN VÁN KHI TIẾP NƯỚC');emitSpray(state.x,sample.h,state.z,18,1.3);}
-   if(!controls.jump&&!wasJump)state.charge=Math.max(0,state.charge-dt*3);
-   wasJump=controls.jump;
-  }
-  state.maxSpeed=Math.max(state.maxSpeed,state.speed);
+  advancePhysics(state,controls,dt,handlePhysicsEvent);hazards.step(state,dt,handlePhysicsEvent);
+  if(!state.air&&state.wipe<=0&&Math.random()<.38)emitSpray(state.x-state.lean*.3,state.y-.12,state.z+.65,2,.65+Math.abs(state.lean)*.7);
  }
- state.x=(state.oceanTime*.72-state.z*.035+.4)/.23+state.offset;
- sampleWater(state.x,state.z,state.oceanTime,sample);
- if(state.air){state.airTime+=dt;state.vy-=9.81*dt;state.airY+=state.vy*dt;if(state.airY<=sample.h+.17&&state.airTime>.1){state.air=false;emitSpray(state.x,sample.h,state.z,35,1.2);splashSound();if(Math.abs(state.lean)>.8&&state.airTime>.5)wipeout();else{const clean=Math.abs(state.lean)<.34;state.speed*=clean?1:.8;if(state.launchWasLip&&state.airTime>.55){state.landings++;reward(clean?260:100,clean?'Tiếp nước hoàn hảo':'Đã tiếp nước',clean?'GIỮ TRỌN TỐC ĐỘ':'HÃY GIỮ VÁN THẲNG HƠN');}else showTrick('Bật nhẹ','LÊN CAO TRÊN MẶT SÓNG ĐỂ BAY XA HƠN');}}}
- if(state.status==='playing'&&!state.air&&state.wipe<=0&&Math.random()<.78)emitSpray(state.x-state.lean*.35,sample.h,state.z+.9,2, .6+Math.abs(state.lean)*.7);
  for(let i=0;i<particleCount;i++){if(life[i]<=0)continue;const j=i*3;life[i]-=dt*.85;positions[j]+=velocity[j]*dt;positions[j+1]+=velocity[j+1]*dt;positions[j+2]+=velocity[j+2]*dt;velocity[j+1]-=5.5*dt;}
  particleGeo.attributes.position.needsUpdate=true;particleGeo.attributes.aLife.needsUpdate=true;
 }
-function updateVisual(dt){
- ocean.update(state.oceanTime,state.x,state.z,state.wipe>0?0:state.speed);
- surfer.rig.position.set(state.x,state.air?state.airY:sample.h+.15,state.z);
- const yaw=-state.steer*.55;normal.set(-sample.dx,1,-sample.dz).normalize();if(state.air)normal.lerp(worldUp,.75).normalize();
- forward.set(Math.sin(yaw),0,Math.cos(yaw));right.crossVectors(normal,forward).normalize();forward.crossVectors(right,normal).normalize();basis.makeBasis(right,normal,forward);orient.setFromRotationMatrix(basis);leanQ.setFromAxisAngle(zAxis,-state.lean*.38);orient.multiply(leanQ);surfer.rig.quaternion.slerp(orient,1-Math.exp(-dt*11));
- if(state.wipe>0){surfer.rig.position.y-=.6;surfer.rig.rotateZ(Math.sin(state.wipe*5)*1.2);}
- surfer.pose(state.lean,state.charge+(controls.pump?.15:0),state.air?1:0,state.oceanTime);
- const menu=state.status==='menu',mobile=innerWidth<600;
- if(menu){cameraTarget.set(state.x+(mobile?8:12),8.8,state.z+17);lookTarget.set(state.x-(mobile?3:5),1.4,state.z-10);}
- else {cameraTarget.set(state.x+state.lean*.65,7.1+state.speed*.04,state.z+12+state.speed*.1);lookTarget.set(state.x+state.steer*1.6,1.2,state.z-10);}
- camera.position.lerp(cameraTarget,1-Math.exp(-dt*(menu?1.8:3.8)));lookNow.lerp(lookTarget,1-Math.exp(-dt*4));camera.lookAt(lookNow);
- camera.fov=lerp(camera.fov,menu?52:52+(state.speed-7)*.75,dt*2);camera.updateProjectionMatrix();
- islands.position.set(state.x*.88,0,state.z*.93);
- for(let i=0;i<5;i++){const x=state.x-55+i*9+Math.sin(state.oceanTime*.15+i)*6,y=20+i*1.9,z=state.z-90-i*9,wing=Math.sin(state.oceanTime*3.5+i)*.55;const j=i*12;birdPos[j]=x-1.1;birdPos[j+1]=y+wing;birdPos[j+2]=z;birdPos[j+3]=x;birdPos[j+4]=y;birdPos[j+5]=z+.3;birdPos[j+6]=x;birdPos[j+7]=y;birdPos[j+8]=z+.3;birdPos[j+9]=x+1.1;birdPos[j+10]=y+wing;birdPos[j+11]=z;}birdGeo.attributes.position.needsUpdate=true;
+function updateVisual(dt,alpha=1){
+ const v=renderState;for(const key of renderKeys)v[key]=lerp(previous[key]??state[key],state[key],alpha);
+ const spinDelta=Math.atan2(Math.sin(state.spinAngle-previous.spinAngle),Math.cos(state.spinAngle-previous.spinAngle));v.spinAngle=previous.spinAngle+spinDelta*alpha;
+ v.air=state.air;v.status=state.status;v.pump=controls.pump;v.landingImpact=state.landingImpact;
+ ocean.update(v.oceanTime,v.x,v.z,state.wipe>0?0:v.speed);sampleWater(v.x,v.z,v.oceanTime,sample);
+ surfer.rig.position.set(v.x,v.y,v.z);
+ normal.set(v.nx,v.ny,v.nz).normalize();if(state.air)normal.lerp(worldUp,.96).normalize();
+ const yaw=-Math.atan2(v.latVel,v.speed)+v.spinAngle;forward.set(Math.sin(yaw),0,Math.cos(yaw));right.crossVectors(normal,forward).normalize();forward.crossVectors(right,normal).normalize();basis.makeBasis(right,normal,forward);orient.setFromRotationMatrix(basis);
+ const bank=state.air?Math.sin(Math.PI*v.airProgress)*.32:-v.lean*.3;leanQ.setFromAxisAngle(zAxis,bank);orient.multiply(leanQ);
+ if(state.air){leanQ.setFromAxisAngle(right.set(1,0,0),Math.cos(Math.PI*v.airProgress)*.32*Math.min(1,v.airTime*8));orient.multiply(leanQ);}
+ surfer.rig.quaternion.slerp(orient,1-Math.exp(-dt*16));
+ if(state.wipe>0){surfer.rig.position.y-=.35;surfer.rig.rotateZ(Math.sin(state.wipe*5)*.7);}
+ surfer.rig.updateMatrixWorld(true);surfer.pose(v,dt);
+ const menu=state.status==='menu',mobile=innerWidth<600,airHeight=Math.max(0,v.y-sample.h-.14);
+ if(menu){cameraTarget.set(v.x+(mobile?5.5:8),5.8,v.z+10.2);lookTarget.set(v.x-(mobile?1.9:3),1.6,v.z-5);}
+ else{cameraTarget.set(v.x+1.1+v.lean*.35,5.4+airHeight*.35,v.z+8.2+v.speed*.04);lookTarget.set(v.x+v.steer*.55,1.5+airHeight*.60,v.z-6);}
+ camera.position.lerp(cameraTarget,1-Math.exp(-dt*(menu?2:4.5)));lookNow.lerp(lookTarget,1-Math.exp(-dt*5));camera.lookAt(lookNow);camera.fov=lerp(camera.fov,menu?49:50+(v.speed-8)*.45,1-Math.exp(-dt*2.5));camera.updateProjectionMatrix();
+ islands.position.set(v.x*.88,0,v.z*.93);hazards.render(v);
+ for(let i=0;i<5;i++){const x=v.x-55+i*9+Math.sin(v.oceanTime*.15+i)*6,y=20+i*1.9,z=v.z-90-i*9,wing=Math.sin(v.oceanTime*3.5+i)*.55;const j=i*12;birdPos[j]=x-1.1;birdPos[j+1]=y+wing;birdPos[j+2]=z;birdPos[j+3]=x;birdPos[j+4]=y;birdPos[j+5]=z+.3;birdPos[j+6]=x;birdPos[j+7]=y;birdPos[j+8]=z+.3;birdPos[j+9]=x+1.1;birdPos[j+10]=y+wing;birdPos[j+11]=z;}birdGeo.attributes.position.needsUpdate=true;
  if(audioCtx&&windGain){const active=soundEnabled&&!document.hidden&&state.status!=='paused';windGain.gain.setTargetAtTime(active?.22+state.speed*.025:0,audioCtx.currentTime,.4);windFilter.frequency.setTargetAtTime(450+state.speed*55,audioCtx.currentTime,.3);}
 }
 function updateHUD(){
  $('score').textContent=String(Math.floor(state.score)).padStart(4,'0');$('combo').innerHTML='×'+state.combo+' <span>NHỊP SÓNG</span>';
  const sec=Math.max(0,Math.ceil(90-state.time));$('timer').textContent=state.mode==='free'?'∞':Math.floor(sec/60)+':'+String(sec%60).padStart(2,'0');$('speed').innerHTML=Math.round(state.speed*3.6)+'<small>km/h</small>';$('speed-bar').style.width=clamp(state.speed/16.5*100,0,100)+'%';
  const p=.4+state.offset*.23;const height=(Math.sin(p)+1)*.5;$('wave-marker').style.left=clamp(height*100,2,98)+'%';$('zone-label').textContent=state.air?'TRÊN KHÔNG':state.edgeTime>0?'TRỞ VỀ MẶT SÓNG':Math.sin(p)>.65?'GẦN ĐỈNH · BẬT SÓNG':'VÙNG LẤY ĐÀ';
+ const threat=hazards.threat(state);$('danger').hidden=!threat||state.status!=='playing';if(threat){$('danger-name').textContent=threat.name;$('danger-distance').textContent=threat.distance+' m · '+(threat.height>2.6?'NGHIÊNG VÁN ĐỂ NÉ':'NÉ HOẶC BẬT QUA');}
+ $('air-info').hidden=!state.air;$('air-info').textContent=state.air?Math.max(0,state.y-sampleWater(state.x,state.z,state.oceanTime,{}).h-.14).toFixed(1)+' m':'';
  $('charge').classList.toggle('active',state.charge>.02);$('charge-bar').style.width=state.charge*100+'%';$('perf-info').textContent=Math.round(state.fps)+' FPS · '+tiers[state.tier].name+' · '+renderer.domElement.width+' × '+renderer.domElement.height;
 }
-function frame(now){requestAnimationFrame(frame);if(document.hidden){lastTime=now;return;}const rawDt=lastTime?(now-lastTime)/1000:1/60;lastTime=now;const dt=Math.min(rawDt,.08);accumulator+=dt;let steps=0;while(accumulator>=1/60&&steps<5){step(1/60);accumulator-=1/60;steps++;}if(steps===5)accumulator=0;updateVisual(dt);renderer.render(scene,camera);frameCount++;hudTime+=dt;if(hudTime>.1){updateHUD();hudTime=0;}
+function frame(now){requestAnimationFrame(frame);if(document.hidden){lastTime=now;return;}const rawDt=lastTime?(now-lastTime)/1000:1/60;lastTime=now;const dt=Math.min(rawDt,.08);accumulator+=dt;let steps=0;while(accumulator>=FIXED_DT&&steps<12){capturePrevious();step(FIXED_DT);accumulator-=FIXED_DT;steps++;}if(steps===12)accumulator=0;updateVisual(dt,accumulator/FIXED_DT);renderer.render(scene,camera);frameCount++;hudTime+=dt;if(hudTime>.1){updateHUD();hudTime=0;}
  measureTime+=rawDt;measureFrames++;if(measureTime>=2){state.fps=measureFrames/measureTime;if(state.quality==='auto'&&state.status==='playing'){if(state.fps<43){slowTime+=measureTime;fastTime=0;}else if(state.fps>57){fastTime+=measureTime;slowTime=0;}else{slowTime=fastTime=0;}if(slowTime>=4&&state.tier>0)applyTier(state.tier-1);else if(fastTime>=14&&state.tier<(isTouch?1:2))applyTier(state.tier+1);}measureTime=0;measureFrames=0;}
 }
 // Small read-only instrumentation allows reproducible performance and state checks.
-window.__SURF__={getState:()=>({...state,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,renderWidth:renderer.domElement.width,renderHeight:renderer.domElement.height,frames:frameCount}),sampleWater:(x,z,t)=>sampleWater(x,z,t),version:'1.0.0'};
+window.__SURF__={getState:()=>({...state,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,renderWidth:renderer.domElement.width,renderHeight:renderer.domElement.height,frames:frameCount,character:surfer.inspect(),obstacles:hazards.inspect()}),sampleWater:(x,z,t)=>sampleWater(x,z,t),version:'2.0.0'};
 try{const context=document.modelContext;if(context?.registerTool){const lifeCycle=new AbortController();const register=tool=>Promise.resolve(context.registerTool(tool,{signal:lifeCycle.signal})).catch(()=>{});register({name:'read_surf_session',description:'Read the current surfing session score, speed and status.',inputSchema:{type:'object',properties:{},additionalProperties:false},annotations:{readOnlyHint:true},execute(input){if(input&&Object.keys(input).length)throw new Error('No parameters accepted.');return {status:state.status,mode:state.mode,score:Math.floor(state.score),speedKmh:Math.round(state.speed*3.6),remainingSeconds:state.mode==='session'?Math.max(0,90-state.time):null};}});register({name:'start_surf_session',description:'Start a new surfing session. Replaces the current run.',inputSchema:{type:'object',properties:{mode:{type:'string',enum:['session','free']}},required:['mode'],additionalProperties:false},annotations:{readOnlyHint:false},execute(input){if(!input||!['session','free'].includes(input.mode)||Object.keys(input).some(k=>k!=='mode'))throw new Error('mode must be session or free');state.mode=input.mode;startGame();return {status:state.status,mode:state.mode};}});window.addEventListener('pagehide',()=>lifeCycle.abort(),{once:true});}}catch{}
 renderer.domElement.addEventListener('webglcontextlost',e=>{e.preventDefault();pause();$('error-text').textContent='Trình duyệt vừa ngắt đồ họa. Tải lại để trở về biển; kỷ lục của bạn vẫn được giữ.';$('error').hidden=false;});
-step(1/60);camera.position.set(state.x+12,8.8,state.z+17);lookNow.set(state.x-5,1.4,state.z-10);updateVisual(1);renderer.compile(scene,camera);renderer.render(scene,camera);$('loading').style.opacity='0';setTimeout(()=>$('loading').hidden=true,500);requestAnimationFrame(frame);
+step(FIXED_DT);capturePrevious();camera.position.set(state.x+8,5.8,state.z+10.2);lookNow.set(state.x-3,1.6,state.z-5);updateVisual(1);renderer.compile(scene,camera);renderer.render(scene,camera);$('loading').style.opacity='0';setTimeout(()=>$('loading').hidden=true,500);requestAnimationFrame(frame);

@@ -1,0 +1,31 @@
+# SHOREBREAK anatomical surfer asset
+
+`surfer-athlete.glb` is a rigged, continuous anatomical human mesh adapted from the CC0 MakeHuman / MPFB2 hm08 base body. It is not assembled from primitive body parts.
+
+## Sources and permissions
+
+- Anatomical base mesh, weights, skeleton and morph data: https://github.com/nirholas/three.ws/tree/main/avatar-sources/anny
+- Acquired binary: https://raw.githubusercontent.com/nirholas/three.ws/main/public/avatars/parametric-base.glb
+- Upstream data lineage: https://github.com/naver/anny (MakeHuman / MPFB2 CC0 data).
+- License statement and original CC0 dedication are saved beside this file as `anny-README.md` and `anny-LICENSE.md`. Original copyright holders named there: Data Collection AB, Joel Palmius and Jonas Hauquier / MakeHuman.
+- The face, hand and foot skin image uses the embedded MakeHuman body texture from https://github.com/MMWilliams/char-kit/blob/master/characters/mh_1037.glb . The repository's credits declare its MakeHuman/MPFB2 meshes and bundled assets CC0: https://github.com/MMWilliams/char-kit#credits-and-licensing . Its README is saved as `char-kit-README.md`.
+- NO char-kit animation or motion-capture data is used or shipped in this derivative. Their motion license is not asserted by this project.
+
+## Changes for this game
+
+Baked a masculine athletic shape from the provided anatomy targets. Recomputed smooth normals and adjusted rest joint centers and inverse-bind matrices to match the baked proportions. Stripped all morph targets, all animation data, and all unused source buffers. Authored a charcoal full wetsuit with teal shoulder panels by cutting mesh faces at the collar, cuffs and ankle/panel boundaries, preserving continuous anatomical geometry and interpolated skin weights. The visible head, ears, nose, lips, hands, fingers and feet retain anatomical topology and the supplied skin texture. No external texture requests or decoder are required.
+
+## Runtime contract
+
+- 1,119,432 bytes; 28,816 triangles; 6 material primitives.
+- 52 Mixamo-style joints, including finger joints.
+- Metres; +Y up; +Z facing; 1.730 m tall.
+- A-pose bind state. All local rest bone rotations are identity; local child offsets carry the actual bind directions. For IK, align each original child offset vector with the desired direction; do not assume every bone's long axis is +Y.
+- GLTFLoader may remove colons from `mixamorig:*` names. Normalize names consistently.
+- Exact hierarchy, local positions, local rest quaternions and world joint centers are in `surfer-athlete-rig.json`.
+- Authoring script: `prepare_surfer.py` (standard Python library only).
+- Final appearance checked in a real Three.js/WebGL browser render in `human-preview.html`.
+
+## Limits
+
+This is a game-ready anatomical human with photo skin detail at gameplay scale, not a scanned/digital-double face. It is deliberately bald. Wetsuit material models fitted neoprene on the body surface, not simulated fabric. No surf animation is included; the game drives the skeleton with its surfing IK and motion system.
