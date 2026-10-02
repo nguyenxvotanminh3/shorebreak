@@ -19,6 +19,11 @@ export async function createSurfer(scene){
  const footL=new THREE.Vector3(),footR=new THREE.Vector3(),poleL=new THREE.Vector3(),poleR=new THREE.Vector3(),handL=new THREE.Vector3(),handR=new THREE.Vector3(),elbowL=new THREE.Vector3(),elbowR=new THREE.Vector3(),toe=new THREE.Vector3(),hipTarget=new THREE.Vector3();
  const motion={charge:0,tuck:0,landing:0,phase:'trim',grab:0,lean:0,steer:0,slope:0,accel:0,time:0};
  const reach=new THREE.Vector3(),palmTarget=new THREE.Vector3();
+ const worldUp=new THREE.Vector3(0,1,0),deckUp=new THREE.Vector3(0,1,0),gravityLocal=new THREE.Vector3(),hipPivot=new THREE.Vector3();
+ const gravityQ=new THREE.Quaternion(),rigQ=new THREE.Quaternion(),avatarInv=avatar.quaternion.clone().invert(),pelvisGravityQ=new THREE.Quaternion();
+ let gravityBlend=0,comShiftX=0,comShiftZ=0;
+ function upperTarget(out,x,y,z){out.set(x+comShiftX,y,z+comShiftZ).sub(hipPivot).applyQuaternion(gravityQ).add(hipPivot);return out.applyMatrix4(rig.matrixWorld);}
+
  const fingerRows=[];
  for(const side of ['Left','Right']){
   const axis=bones[side+'HandIndex1'].position.clone().sub(bones[side+'HandPinky1'].position).normalize();
@@ -42,7 +47,7 @@ export async function createSurfer(scene){
  }
  const leashArray=new Float32Array(7*3),leashGeometry=new THREE.BufferGeometry();leashGeometry.setAttribute('position',new THREE.BufferAttribute(leashArray,3));const leash=new THREE.Line(leashGeometry,new THREE.LineBasicMaterial({color:0x193c42,transparent:true,opacity:.78}));rig.add(leash);
  function pose(s,dt){
-  dt=clamp(dt||1/60,0,.1);motion.time=Number.isFinite(s.oceanTime)?s.oceanTime:motion.time+dt;
+  dt=clamp(dt||1/60,0,.1);rig.updateMatrixWorld(true);motion.time=Number.isFinite(s.oceanTime)?s.oceanTime:motion.time+dt;
   const phase=clamp(s.airProgress||0,0,1),tuckTarget=s.air?smooth(.10,.34,phase)*(1-smooth(.62,.91,phase)):0;
   const landElapsed=Math.max(0,.65-(s.landingTime||0));
   const landing=s.landingTime>0?(1-Math.exp(-landElapsed*32))*Math.exp(-landElapsed*4.7)*clamp(s.landingImpact||.5,.3,1.3):0;
@@ -56,11 +61,24 @@ export async function createSurfer(scene){
   const grounded=s.air?0:1,breathe=Math.sin(t*1.65)*.006+Math.sin(t*3.1+.7)*.002;
   const rebound=grounded*(breathe-motion.slope*.024),weightShift=Math.sin(t*1.2+.6)*.009*grounded;
   const compress=charge*.205+tuck*.42+Math.abs(lean)*.105+motion.landing*.31;
-  const hipY=.855-compress+rebound,hipX=lean*.095-charge*.035-tuck*.025,hipZ=.035-charge*.065+tuck*.045+weightShift-motion.accel*.003;
+  const hipY=.855-compress+rebound;
+  // The ocean tilts the board, not gravity. Counter only 60% of the deck tilt on water.
+  // Airborne rotations are completely board-relative so a 360 never fights world-up.
+  gravityBlend=s.air&&(s.airTime??phase*2)>.2?0:mix(gravityBlend,s.air?0:1,1-Math.exp(-dt*(s.air?18:12)));
+  rig.getWorldQuaternion(rigQ);rigQ.invert();gravityLocal.copy(worldUp).applyQuaternion(rigQ).normalize();
+  gravityQ.setFromUnitVectors(deckUp,gravityLocal);gravityQ.identity().slerp(pelvisGravityQ.setFromUnitVectors(deckUp,gravityLocal),.60*gravityBlend);
+  const supportHeight=Math.max(.2,hipY-.153),upY=Math.max(.65,gravityLocal.y);
+  comShiftX=clamp(gravityLocal.x/upY*supportHeight*.52,-.19,.19)*gravityBlend;
+  comShiftZ=clamp(gravityLocal.z/upY*supportHeight*.48,-.14,.14)*gravityBlend;
+  const hipX=.018+lean*.075-charge*.035-tuck*.025+comShiftX;
+  const hipZ=.035-charge*.065+tuck*.045+weightShift-motion.accel*.003+comShiftZ;
+  hipPivot.set(hipX,hipY,hipZ);
   motion.phase=s.wipe>0?'recovery':s.air?(phase<.18?'extension':phase<.67?'tuck-grab':'spot-landing'):s.landingTime>.1?'absorb':charge>.1?'compress':Math.abs(lean)>.25?'bottom-turn':'trim';
   for(let i=0;i<rest.length;i++){const r=rest[i];r.bone.quaternion.copy(r.q);r.bone.position.copy(r.p);}
   target(hipTarget,hipX,hipY,hipZ);bones.Hips.parent.worldToLocal(hipTarget);bones.Hips.position.copy(hipTarget);
   bones.Hips.rotation.set(0,.035-lean*.15-motion.steer*.035,-lean*.045);
+  pelvisGravityQ.copy(avatarInv).multiply(gravityQ).multiply(avatar.quaternion);
+  bones.Hips.quaternion.premultiply(pelvisGravityQ);
   // Shoulders lead the turn while the pelvis stays above the feet; bend is spread through spine.
   bones.Spine.rotation.set(.12+charge*.13+tuck*.43,.13+lean*.15,.025-lean*.06);
   bones.Spine1.rotation.set(.06+tuck*.23,.105+lean*.12,-.045-charge*.025);
@@ -76,9 +94,9 @@ export async function createSurfer(scene){
   if(bones.RightToeBase){target(toe,.139,.105,.445);aim(bones.RightFoot,bones.RightToeBase,toe);}
   const armSway=grounded*Math.sin(t*1.45+.4)*.018,armLag=motion.steer*.025;
   // Front hand guides the line. Rear arm is lower and bent rather than a symmetric T-pose.
-  target(handL,mix(.31+lean*.055,.20,grab),mix(hipY+.24+armSway,hipY+.53,grab),mix(-.48-armLag,-.39,grab));
-  target(handR,mix(.29-lean*.075,.277,grab),mix(hipY+.11-armSway,.19,grab),mix(.40+armLag,.10,grab));
-  target(elbowL,.47+lean*.045,hipY+.12,-.32);target(elbowR,.43-lean*.04,hipY+.02,.29);
+  upperTarget(handL,mix(.31+lean*.055,.20,grab),mix(hipY+.24+armSway,hipY+.53,grab),mix(-.48-armLag,-.39,grab));
+  upperTarget(handR,mix(.29-lean*.075,.277,grab),mix(hipY+.11-armSway,.19,grab),mix(.40+armLag,.10,grab));
+  upperTarget(elbowL,.47+lean*.045,hipY+.12,-.32);upperTarget(elbowR,.43-lean*.04,hipY+.02,.29);
   solve(bones.LeftArm,bones.LeftForeArm,bones.LeftHand,handL,elbowL,true);
   solve(bones.RightArm,bones.RightForeArm,bones.RightHand,handR,elbowR,true);
   // Wrists remain continuous with the forearm; only the rail hand pronates slightly.
@@ -88,6 +106,6 @@ export async function createSurfer(scene){
   rig.updateMatrixWorld(true);
   for(let i=0;i<7;i++){const u=i/6;leashArray[i*3]=mix(-.08,.02,u)+Math.sin(u*Math.PI)*.21;leashArray[i*3+1]=mix(.16,.075,u)-Math.sin(u*Math.PI)*.07;leashArray[i*3+2]=mix(.44,1.01,u);}leashGeometry.attributes.position.needsUpdate=true;
  }
- function inspect(){rig.updateMatrixWorld(true);const left=bones.LeftFoot.getWorldPosition(new THREE.Vector3()),right=bones.RightFoot.getWorldPosition(new THREE.Vector3());rig.worldToLocal(left);rig.worldToLocal(right);return {type:'MakeHuman anatomical skinned mesh',bones:rest.length,skinMeshes,triangles,phase:motion.phase,tuck:motion.tuck,grab:motion.grab,feet:[left.toArray(),right.toArray()]};}
+ function inspect(){rig.updateMatrixWorld(true);const left=bones.LeftFoot.getWorldPosition(new THREE.Vector3()),right=bones.RightFoot.getWorldPosition(new THREE.Vector3());rig.worldToLocal(left);rig.worldToLocal(right);return {type:'MakeHuman anatomical skinned mesh',bones:rest.length,skinMeshes,triangles,phase:motion.phase,tuck:motion.tuck,grab:motion.grab,gravityBlend,comShift:[comShiftX,comShiftZ],feet:[left.toArray(),right.toArray()]};}
  pose({lean:0,charge:0,air:false,landingTime:0},1);return {rig,pose,inspect};
 }
