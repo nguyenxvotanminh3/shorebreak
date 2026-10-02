@@ -1,0 +1,37 @@
+SHOREBREAK 4.2 — validation and local review
+
+Run the automated suite with Node.js 24:
+  node --test tests/*.test.mjs
+
+Run the game:
+  python3 -m http.server 4173 --directory dist
+  Open http://127.0.0.1:4173/ in a WebGL 2 browser
+
+What was checked automatically
+- Grounded E intent, airborne aura eligibility, release and wipeout reset
+- Real GLB skeleton, hand movement, planted feet, smooth style changes
+- Animation filter equivalence at 30, 60 and 120 updates/second; zero-time freeze
+- Keyboard aliases and simultaneous keyboard/touch pointer ownership
+- Production event handlers and frame loop with DOM/renderer stand-ins:
+  repeat hold/release, Space+E launch, P pause, resume, blur, settings,
+  restart, quality high/low and touch cancellation
+- Wind sound mutes during pause although visuals are frozen
+- Shadow tiers, moving shadow volume and contact-shade buffer reuse
+- All five creatures: 4,800 animation updates, stable mesh/material/buffer and
+  collider identities, finite geometry/UV data and bounded shared textures
+- JavaScript syntax, relative imports, git whitespace/diff checks
+
+Pending real-browser/GPU checks (not represented as passed)
+- Actual keydown/hold/keyup and multi-touch on desktop/mobile
+- All three aura poses during live surfing and repeated jumps
+- Pause/resume/window blur while airborne with sound enabled
+- Visual before/after review of kaiju, kraken, shark, serpent and jellyfish
+- Shadow acne, contact-shade alignment, shader compilation and console errors
+- GPU FPS/frame pacing on low/balanced/high and a physical phone
+
+The cloud preview service was unreachable during this pass. Automated tests
+used real Three.js geometry and the actual athlete skeleton, but the application
+integration test uses DOM/renderer stand-ins and never draws pixels. No real
+browser screenshots or performance guarantees are included.
+
+No publication, deployment or merge is part of this package.
