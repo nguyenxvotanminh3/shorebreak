@@ -10,6 +10,12 @@ Giữ E trên không: aura farming với ba tư thế luân phiên — Chào só
 Thả hướng trước khi tiếp nước để đáp đẹp. S hoặc ↓: giảm tốc. P / Esc: tạm dừng.
 Điện thoại: dùng nút trái, phải, lấy đà, bật sóng và AURA.
 
+LƯU Ý KHI CHƠI
+Âm thanh mặc định tắt; nhấn nút ♪ ở góc trên để bật.
+Khi chuyển tab hoặc rời cửa sổ, game tự tạm dừng. Quay lại rồi nhấn P / Esc hoặc LƯỚT TIẾP để chơi tiếp.
+Để lưu kỷ lục, nhấn P / Esc rồi chọn Chốt điểm lượt này trước khi đóng trang. Về bờ hoặc Bắt đầu lại không chốt điểm lượt đang chơi.
+Kỷ lục và mức đồ họa được lưu bằng localStorage của trình duyệt, không đồng bộ giữa thiết bị hoặc địa chỉ truy cập. Xóa dữ liệu trang sẽ xóa các thiết lập này.
+
 ĐƯỜNG ĐUA
 Máy nghiền, cổng cưa, búa dập, kaiju vung tay/quét đuôi và bốn loài sinh vật biển. Các máy luôn có lối vòng hai bên. Cổng cưa và búa có nhịp mở; máy nghiền thấp có thể nhảy qua. Mật độ tăng dần theo quãng đường.
 Va chạm làm 10 mảnh cơ thể thật cùng ván văng, xoay và rơi xuống nước, với giọt đỏ hoạt hình. Hồi sinh sau 2,4 giây, có thêm 2,4 giây bảo vệ để tiếp tục chơi.
