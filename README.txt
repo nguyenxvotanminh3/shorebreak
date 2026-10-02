@@ -1,47 +1,79 @@
-SHOREBREAK 4.2 — SURF OR SPLAT
+SHOREBREAK — VỰC LẶNG / first-person underwater prototype
 
-Game lướt sóng 3D chạy vô tận. Né chướng ngại, bật sóng và biểu diễn trên ván để tăng điểm. Không có giới hạn 90 giây; nhấn P, chọn Chốt điểm lượt này khi muốn kết thúc.
+Một chuyến khảo sát đại dương góc nhìn thứ nhất. Khởi đầu bên phao nghiên cứu,
+lặn qua rừng tảo và tàn tích Trạm Chuông để tìm ba tín hiệu ở đáy vực Nacre.
+Bối cảnh, giao diện, hình học môi trường và sinh vật được làm riêng cho dự án.
+Lấy cảm hứng từ cảm giác cô độc, quản lý oxy và khám phá của game lặn; không
+sử dụng nhân vật, giao diện, bản đồ, âm thanh hay tài sản của Subnautica.
+
+CHẠY TRÊN WEB
+Không cài dependencies, không build, không dịch vụ bên ngoài.
+1. Cài Node.js nếu máy chưa có.
+2. Trong thư mục này: node server.cjs
+3. Mở http://127.0.0.1:4173/ trong trình duyệt có WebGL 2.
+Hoặc: python3 -m http.server 4173 --directory dist
+Không mở index.html bằng file:// vì trình duyệt chặn ES modules/GLB.
+Có thể đưa toàn bộ dist/ lên dịch vụ static HTTPS khi muốn xuất bản.
+Bản này chưa được push, merge hay triển khai lên website công khai.
 
 ĐIỀU KHIỂN
-A / D hoặc ← / →: nghiêng và né trái phải.
-W hoặc ↑: lấy đà khi xuống mặt sóng.
-Space: giữ để nén ván, thả để nhảy. Nhảy khi có tốc độ và gần đỉnh sóng sẽ cao hơn.
-Giữ E: tạo dáng ngay khi lướt; trên không sẽ aura farming với ba tư thế luân phiên — Chào sóng, Sky King, Chiến thắng. Bay qua chướng ngại trong tư thế này để nhận điểm aura.
-Thả hướng trước khi tiếp nước để đáp đẹp. S hoặc ↓: giảm tốc. P / Esc: tạm dừng.
-Điện thoại: dùng nút trái, phải, lấy đà, bật sóng và AURA.
+W / A / S / D: bơi theo hướng nhìn; di chuyển có quán tính nhẹ.
+Chuột: nhìn quanh khi khóa con trỏ. Nếu trình duyệt từ chối khóa, kéo chuột
+trên cảnh hoặc dùng phím mũi tên. Nút Khóa chuột cho phép thử lại chủ động.
+Space: nổi lên. Ctrl hoặc C: lặn xuống. Shift: bơi nhanh, tốn oxy hơn.
+Giữ E: quét khối dữ liệu ở gần, trong tầm nhìn, liên tục 2,5 giây.
+F: đèn pin. Q: sonar, hiện mục tiêu xa và xung âm; hồi sau 9 giây.
+P / Esc: tạm dừng. Trình duyệt mất focus/chuyển tab cũng tạm dừng.
+Điện thoại: nút trái để di chuyển, vuốt vùng cảnh trống để nhìn, các nút
+Lên/Xuống/Quét/Nhanh bên phải. Đèn và sonar có nút riêng.
 
-LƯU Ý KHI CHƠI
-Âm thanh mặc định tắt; nhấn nút ♪ ở góc trên để bật.
-Khi chuyển tab hoặc rời cửa sổ, game tự tạm dừng. Quay lại rồi nhấn P / Esc hoặc LƯỚT TIẾP để chơi tiếp.
-Để lưu kỷ lục, nhấn P / Esc rồi chọn Chốt điểm lượt này trước khi đóng trang. Về bờ hoặc Bắt đầu lại không chốt điểm lượt đang chơi.
-Kỷ lục và mức đồ họa được lưu bằng localStorage của trình duyệt, không đồng bộ giữa thiết bị hoặc địa chỉ truy cập. Xóa dữ liệu trang sẽ xóa các thiết lập này.
+VÒNG KHÁM PHÁ
+Ba điểm khảo sát: Bãi Kính, Trạm Chuông, Khe Thở. Vòng sáng xanh đánh dấu mẫu.
+Tổng bình khí 150 giây cơ bản; lặn sâu và bơi nhanh làm tiêu hao nhiều hơn.
+Nổi lên mặt nước hoặc vào túi khí dưới chuông lặn để nạp oxy và hồi thể trạng.
+Không cần đi hết trong một lần: quay về sát phao trên mặt nước để gửi mẫu.
+Mẫu đã gửi và độ sâu kỷ lục lưu trong localStorage của trình duyệt này.
+Sinh vật lớn gây thương tích nếu chạm gần. Hết oxy bắt đầu làm giảm thể trạng.
+Khi thể trạng cạn, dây cứu hộ kéo bạn về phao; chỉ mẫu CHƯA gửi bị mất.
+Có thể gọi cứu hộ thủ công ở menu tạm dừng, chịu cùng hậu quả.
+Gửi đủ ba mẫu là hoàn tất chuyến khảo sát, sau đó vẫn tự do khám phá.
+Đèn pin hiện chỉ là công cụ chiếu sáng. Sinh vật tuần tra có va chạm nguy hiểm;
+đây chưa phải AI săn mồi, sinh thái mô phỏng hoặc game sinh tồn hoàn chỉnh.
 
-ĐƯỜNG ĐUA
-Máy nghiền, cổng cưa, búa dập, kaiju vung tay/quét đuôi và bốn loài sinh vật biển. Các máy luôn có lối vòng hai bên. Cổng cưa và búa có nhịp mở; máy nghiền thấp có thể nhảy qua. Mật độ tăng dần theo quãng đường.
-Va chạm làm 10 mảnh cơ thể thật cùng ván văng, xoay và rơi xuống nước, với giọt đỏ hoạt hình. Hồi sinh sau 2,4 giây, có thêm 2,4 giây bảo vệ để tiếp tục chơi.
-Chướng ngại dùng pool 12 đối tượng, liên tục được đưa ra phía trước. Không tích lũy thêm mesh theo chiều dài lượt chơi.
-Cảnh xa có du thuyền, thuyền buồm, tàu container chạy ngang, wake, đảo cọ và hải đăng.
+ÂM THANH / TÍNH TIỆN DỤNG
+Âm thanh mặc định tắt, bật chủ động ở thanh trên. Âm nền, nhịp thở và sonar
+được tổng hợp tại máy, không có file nhạc bên ngoài. Tạm dừng sẽ tắt tiếng.
+Cài đặt có độ nhạy, âm lượng, giảm rung và ba mức đồ họa. Tự động khởi đầu
+Cân bằng trên máy tính, Tiết kiệm trên thiết bị chạm; chỉ hạ sau khi chậm kéo dài.
+Tiến độ/cài đặt không đồng bộ, chỉ có ở thiết bị và địa chỉ trang hiện tại.
 
-ĐỒ HỌA VÀ MÔ HÌNH
-Three.js, biển shader đồng bộ công thức vật lý, nhân vật MakeHuman CC0 với 52 xương và IK giữ chân trên ván. Máy, quái vật, tàu và đảo là mô hình procedural nguyên bản. Giấy phép đi kèm trong assets/ và vendor/.
-Đồ họa tự thích nghi, có ba mức thủ công trong Cài đặt. Da sinh vật có vân màu, độ nhám và normal map procedural dùng chung; bóng tiếp xúc bám mặt sóng ở mọi mức. Cân bằng/Cao bật thêm bóng đổ và bóng tự thân 1024/2048; Tiết kiệm tắt shadow map. Cần WebGL 2 và tăng tốc đồ họa. Hiệu năng còn phụ thuộc thiết bị và trình duyệt.
-Đây là vật lý game và hoạt ảnh procedural, không phải mô phỏng chất lỏng đầy đủ hay motion capture.
+TỐI ƯU CỤ THỂ
+- 48 ô địa hình, tổng 55.296 tam giác nền; cắt ô ngoài khoảng nhìn
+- Đá, san hô, tảo, quạt biển, bọt biển và cá nhỏ được instancing
+- 450 / 850 / 1.350 hạt nước; một bộ đệm và chuyển động shader
+- Tối đa 60 / 125 / 210 cá nhỏ trên toàn bản đồ theo Tiết kiệm/Cân bằng/Cao
+- DPR tối đa 0,8 / 1,2 / 1,6; không bloom, không shadow map, không hậu kỳ nặng
+- Ba sinh vật lớn có LOD thật; tải gần khu vực, ẩn ngoài khoảng cách quy định
+- Bản chi tiết chỉ tải ở mức Cao khi đến gần; model animation chỉ cập nhật khi hiện
+- Shader caustics dùng chung, không tạo mesh/material/texture mới trong vòng lặp
+- HUD cập nhật 10 lần/giây; vật lý bước cố định 90 Hz
+Chi tiết ngân sách từng model nằm trong dist/assets/abyss/ASSET-MANIFEST.json.
+Không có hệ thống streaming địa hình từ server: ô cảnh được dựng một lần rồi
+culling. Các model LOD tải theo khoảng cách và giữ lại để tránh tải lặp.
+Chưa đo GPU/FPS trên trình duyệt thật hoặc điện thoại, không bảo đảm tốc độ.
 
-CHẠY MÃ NGUỒN
-Không cần cài dependencies hay build.
-Trong checkout: python3 -m http.server 4173 --directory dist
-Trong bản ZIP phẳng có server.cjs: node server.cjs
-Mở http://127.0.0.1:4173/ — không mở index.html trực tiếp bằng file://.
+CẤU TRÚC
+index.html / abyss.css: giao diện visor, menu và điều khiển chạm.
+abyss.js: vòng đời ứng dụng, first-person camera, audio, HUD, lưu cục bộ.
+abyss-sim.js: vật lý, oxy, quét mẫu, thương tích, cứu hộ, gửi dữ liệu.
+abyss-input.js: tách bàn phím và nhiều pointer, xử lý huỷ và đối kháng.
+abyss-world.js: địa hình, tàn tích, collider, môi trường và các quality tier.
+abyss-life.js: cá bầy, tải GLB/LOD, skeleton animation và tuần tra sinh vật.
+Bản lướt sóng cũ vẫn còn ở /surf-legacy.html cùng modules cũ để giữ công sức
+trước đó. Chúng không chạy trong chuyến lặn mới.
 
-CÁC MODULE
-physics.js: bước vật lý 120 Hz, nhảy, hồi sinh và aura.
-surfer.js: người có bộ xương, IK và ba tư thế biểu diễn.
-gauntlet.js / collision.js: đường đua vô tận và va chạm theo đường quét.
-machines.js / kaiju.js / creatures.js / swimming.js: mô hình, hitbox và hoạt ảnh.
-crash-fx.js / aura.js: hiệu ứng tái sử dụng.
-seascape.js / water.js: tàu thuyền, cảnh xa và mặt biển.
-game.js / index.html / style.css: vòng chơi, camera, điều khiển và giao diện.
-
-KIỂM TRA MÃ NGUỒN
-Node.js 24: node --test tests/*.test.mjs
-Bộ kiểm tra gồm vật lý, IK từ GLB thật, giữ/thả E, dừng hoạt ảnh, nguồn điều khiển và cấu trúc đồ họa. Không thay thế kiểm tra hình ảnh/GPU trong trình duyệt.
+KIỂM TRA
+node --test tests/*.test.mjs
+Đọc TESTING.txt để phân biệt những gì đã kiểm bằng code và kiểm trình duyệt
+vẫn bị chặn. Bản prototype có nguồn mở để chỉnh sửa, chưa phải bản phát hành
+đã qua QA đa thiết bị.

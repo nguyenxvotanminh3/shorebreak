@@ -1,0 +1,44 @@
+SHOREBREAK / VỰC LẶNG — concrete budgets and limitations
+
+Rendering strategy
+Static Three.js r170, WebGL 2, self-hosted assets. No runtime CDN or npm/build.
+No dynamic shadows, bloom, SSAO or full-screen postprocessing. One rendered view.
+World materials use shared analytical caustics. Camera remains first person.
+
+Quality tiers: low / medium / high
+Pixel ratio cap:               0.8 / 1.2 / 1.6
+Particle draw range:            450 / 850 / 1350
+Fish instances per school:     12 / 25 / 42 (5 schools, culled by distance)
+Repeated habitat density:      46% / 75% / 100%
+Habitat detail radius:         90 / 123 / 170m (tile centers)
+Terrain tile radius:           144 / 184 / 229m (tile centers)
+Light shafts:                  off / 5 / 5
+Torch distance:                35 / 48 / 48m
+Large creature quality:        LOD / LOD / distance LOD+full
+
+World: 48 terrain tiles, 55,296 terrain triangles in entire fixed world;
+612 rock instances, 707 branching corals, 1,316 kelp, 266 sea fans, 855 sponge
+tubes, 388 cylindrical rock/landmark colliders. Habitat is generated once,
+then its draw counts and visibility are changed in place. Frustum culling
+also applies to world meshes. Small fish use shared geometry and material.
+Max 3 large creatures; only loaded visible creatures update skeleton poses.
+GLBs load in proximity to habitat; full variant loads only near on high tier.
+Loaded variants remain cached, not unloaded during one session. High/LOD
+switches share an absolute animation time to avoid a phase reset.
+
+Simulation/UI
+90Hz fixed step, capped catch-up; all simulation and animation stop on pause.
+Input has keyboard/pointer ownership and clear-on-blur/cancel. HUD text is
+updated at 10Hz; projected navigation markers move each visual frame.
+Banked progress saves only when serialized banked/deepest data changes.
+Auto quality starts medium/low and drops after 5 seconds of >32ms frame time.
+The performance label is a local rolling render-loop estimate, not a promise.
+
+Not implemented / not verified
+No streaming terrain downloads, GPU occlusion queries, compressed KTX2 textures,
+Draco decode or custom meshopt pipeline. GLBs are embedded-image files and
+fetch only when useful; model counts are recorded in ASSET-MANIFEST.json.
+No browser/GPU/mobile FPS verification could run: Chromium launch is blocked
+by the execution environment's local IPC restrictions, including approved
+escalation. Node tests use actual geometry/skeletons and renderer stand-ins.
+The standalone game still needs actual browser/device review before release.

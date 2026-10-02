@@ -1,0 +1,17 @@
+SHOREBREAK / VỰC LẶNG — original underwater assets
+
+Reefbreaker shark, Abyssal Regent kraken and Abyssal Warden sea kaiju are
+custom Blender models authored for this project. GLBs contain original
+generated PBR textures and embedded skeleton animation. The related Blender
+sources are provided separately in the creature prototype packages.
+
+The shader caustics, seafloor, habitat props, ruins, dive bell, buoy, data
+instruments, shoaling fish and UI are original procedural work in this repo.
+Sound is generated through Web Audio; there are no third-party sound clips.
+
+Three.js and GLTFLoader remain vendored under their included MIT license.
+No Subnautica assets, maps, UI, audio or branded creatures are included.
+Original prior surfing assets and their licenses are preserved under ../.
+
+Model counts, embedded texture sizes and clips are recorded from actual GLB
+contents in ASSET-MANIFEST.json. Those counts are not measured GPU performance.

@@ -1,0 +1,173 @@
+{
+  "version": "abyss-prototype-1",
+  "date": "2026-10-02",
+  "sharkRevision": "v3 corrected continuous jaw and subterminal mouth",
+  "axis": "Y up, -Z forward",
+  "notes": "Counts extracted from embedded GLB contents; no browser GPU performance claim. Model studio renders were reviewed by asset authors; game renderer remains unverified.",
+  "models": [
+    {
+      "file": "kraken-lod.glb",
+      "bytes": 1485084,
+      "sha256": "5a640e0ad6f32d37585feb9a1a6c6b126f299c04631354f69680184736a16f4e",
+      "triangles": 18000,
+      "meshPrimitives": 4,
+      "materials": 4,
+      "bones": 59,
+      "clips": [
+        "Abyssal drift | 6 second seamless idle"
+      ],
+      "images": [
+        {
+          "mimeType": "image/png",
+          "bytes": 109668
+        },
+        {
+          "mimeType": "image/png",
+          "bytes": 89896
+        },
+        {
+          "mimeType": "image/png",
+          "bytes": 50682
+        }
+      ]
+    },
+    {
+      "file": "kraken.glb",
+      "bytes": 4147892,
+      "sha256": "c5c399de343a3c1c519110882f2247cd29710c8aa6ba81a482a64c7a3614e1d9",
+      "triangles": 55873,
+      "meshPrimitives": 4,
+      "materials": 4,
+      "bones": 59,
+      "clips": [
+        "Abyssal drift | 6 second seamless idle"
+      ],
+      "images": [
+        {
+          "mimeType": "image/png",
+          "bytes": 384742
+        },
+        {
+          "mimeType": "image/png",
+          "bytes": 281235
+        },
+        {
+          "mimeType": "image/png",
+          "bytes": 234805
+        }
+      ]
+    },
+    {
+      "file": "shark-lod.glb",
+      "bytes": 1593796,
+      "sha256": "871c3d45632c890ad8209f5349ffdd6bcc83f1252a63ca8a69a37ecd7236a0a8",
+      "triangles": 14401,
+      "meshPrimitives": 3,
+      "materials": 3,
+      "bones": 8,
+      "clips": [
+        "Cruise \u00b7 2.4 second seamless swim"
+      ],
+      "images": [
+        {
+          "mimeType": "image/png",
+          "bytes": 451170
+        },
+        {
+          "mimeType": "image/png",
+          "bytes": 206675
+        }
+      ]
+    },
+    {
+      "file": "shark.glb",
+      "bytes": 4076704,
+      "sha256": "dce3581794ebf774e90952b5dbdeb9dbd4a96507441fe016b8b0419acd25ead0",
+      "triangles": 28802,
+      "meshPrimitives": 3,
+      "materials": 3,
+      "bones": 8,
+      "clips": [
+        "Cruise \u00b7 2.4 second seamless swim"
+      ],
+      "images": [
+        {
+          "mimeType": "image/png",
+          "bytes": 1651488
+        },
+        {
+          "mimeType": "image/png",
+          "bytes": 766821
+        }
+      ]
+    },
+    {
+      "file": "warden-lod.glb",
+      "bytes": 3246340,
+      "sha256": "36624e6f495914a6d581914c5b05b672540aeb6db611168051d9dcfcc37a79c8",
+      "triangles": 22000,
+      "meshPrimitives": 6,
+      "materials": 6,
+      "bones": 18,
+      "clips": [
+        "Abyssal threat idle \u00b7 4 second seamless loop"
+      ],
+      "images": [
+        {
+          "mimeType": "image/png",
+          "bytes": 566446
+        },
+        {
+          "mimeType": "image/png",
+          "bytes": 210538
+        },
+        {
+          "mimeType": "image/png",
+          "bytes": 188588
+        },
+        {
+          "mimeType": "image/png",
+          "bytes": 493545
+        },
+        {
+          "mimeType": "image/png",
+          "bytes": 272061
+        }
+      ]
+    },
+    {
+      "file": "warden.glb",
+      "bytes": 4678800,
+      "sha256": "386f56ed88c765b90539e66b4a32124e4b699c60ca2c353b6c5b6fea7786682d",
+      "triangles": 53064,
+      "meshPrimitives": 6,
+      "materials": 6,
+      "bones": 18,
+      "clips": [
+        "Abyssal threat idle \u00b7 4 second seamless loop"
+      ],
+      "images": [
+        {
+          "mimeType": "image/png",
+          "bytes": 566446
+        },
+        {
+          "mimeType": "image/png",
+          "bytes": 210538
+        },
+        {
+          "mimeType": "image/png",
+          "bytes": 188588
+        },
+        {
+          "mimeType": "image/png",
+          "bytes": 493545
+        },
+        {
+          "mimeType": "image/png",
+          "bytes": 272061
+        }
+      ]
+    }
+  ]
+}
