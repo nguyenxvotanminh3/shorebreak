@@ -1,25 +1,27 @@
 import * as THREE from './vendor/three.module.js';
+import {organicMaterial,organicTint,sculptSurface,smoothRingSeam} from './creature-surface.js';
 
-// Original lightweight, texture-free sea life. Units are metres; waterline is y=0.
+// Original lightweight sea life with shared procedural organic surfaces. Units are metres; waterline is y=0.
 // Every animated tube reuses its typed arrays. Materials are shared between instances.
 const TAU = Math.PI * 2;
 const palette = {
-  shark: [0x435e68, 0xb3c6bc], kraken: [0x85465e, 0xe8a477],
-  serpent: [0x2e756f, 0xaac99d], jelly: [0x95bddd, 0xe2bafa],
+  shark: [0x365b65, 0xd0d5bd], kraken: [0x6f354d, 0xdc9371],
+  serpent: [0x28675b, 0xb8bd8d], jelly: [0x95bddd, 0xe2bafa],
 };
 let cachedMaterials;
 function materials() {
   if (!cachedMaterials) cachedMaterials = {
-    skin: new THREE.MeshStandardMaterial({vertexColors:true, roughness:.49, metalness:.06}),
-    eye: new THREE.MeshStandardMaterial({vertexColors:true, roughness:.18, metalness:.06}),
-    bell: new THREE.MeshPhysicalMaterial({color:0x9bcbea, transparent:true, opacity:.57,
-      roughness:.2, metalness:0, clearcoat:.8, side:THREE.DoubleSide, depthWrite:false}),
-    glow: new THREE.MeshStandardMaterial({vertexColors:true, roughness:.4,
-      emissive:0x2a1636, emissiveIntensity:.4}),
+    skin: organicMaterial('denticle'),
+    mantle: organicMaterial('mantle'),
+    reptile: organicMaterial('reptile'),
+    eye: new THREE.MeshStandardMaterial({vertexColors:true, roughness:.25, metalness:0}),
+    bell: new THREE.MeshPhysicalMaterial({color:0x9bcbea, transparent:true, opacity:.46,
+      roughness:.38, metalness:0, clearcoat:.18, clearcoatRoughness:.42, side:THREE.DoubleSide, depthWrite:false}),
+    glow: new THREE.MeshStandardMaterial({vertexColors:true, roughness:.64,
+      emissive:0x252a46, emissiveIntensity:.16}),
   };
   return cachedMaterials;
 }
-const color = hex => new THREE.Color(hex);
 function reflectX(g, sign) {
   if (sign===1) return g;
   g.scale(-1,1,1);
@@ -30,33 +32,25 @@ function reflectX(g, sign) {
   }
   return g;
 }
-const mix = (a,b,t) => a + (b-a)*t;
-const smooth = x => x*x*(3-2*x);
 const cubic = (a,b,c,d,t) => .5*((2*b)+(-a+c)*t+(2*a-5*b+4*c-d)*t*t+(-a+3*b-3*c+d)*t*t*t);
 function tint(geometry, upper, lower=upper, yMin=-1, yMax=1) {
-  const p=geometry.attributes.position, c=new Float32Array(p.count*3);
-  const a=color(lower), b=color(upper);
-  for(let i=0;i<p.count;i++) {
-    const f=smooth(THREE.MathUtils.clamp((p.getY(i)-yMin)/(yMax-yMin),0,1));
-    c[i*3]=mix(a.r,b.r,f); c[i*3+1]=mix(a.g,b.g,f); c[i*3+2]=mix(a.b,b.b,f);
-  }
-  geometry.setAttribute('color',new THREE.BufferAttribute(c,3)); return geometry;
+  return organicTint(geometry,upper,lower,yMin,yMax,.17);
 }
 function merge(parts) {
   const sizes=parts.map(g=>g.index?g.toNonIndexed():g);
   let count=0; sizes.forEach(g=>count+=g.attributes.position.count);
   const result=new THREE.BufferGeometry();
-  for(const name of ['position','normal','color']) {
-    const data=new Float32Array(count*3); let offset=0;
+  for(const name of ['position','normal','color','uv']) {
+    const itemSize=name==='uv'?2:3,data=new Float32Array(count*itemSize); let offset=0;
     for(const g of sizes) {data.set(g.attributes[name].array,offset); offset+=g.attributes[name].array.length;}
-    result.setAttribute(name,new THREE.BufferAttribute(data,3));
+    result.setAttribute(name,new THREE.BufferAttribute(data,itemSize));
   }
   result.computeBoundingSphere();
   sizes.forEach((g,i)=>{if(g!==parts[i])g.dispose(); parts[i].dispose();});
   return result;
 }
 function mesh(group, geometry, material=materials().skin) {
-  const m=new THREE.Mesh(geometry,material); m.castShadow=false; m.receiveShadow=false;
+  const m=new THREE.Mesh(geometry,material); m.castShadow=!material.transparent; m.receiveShadow=true;
   group.add(m); return m;
 }
 function ellipsoid(x,y,z,sx,sy,sz,hex,segments=14,rings=10) {
@@ -69,19 +63,19 @@ function pathTube(points,radius,hex,sides=7) {
 }
 // A smooth fusiform loft along z, with independent width/height and a soft belly gradient.
 function loft(rows, upper, lower, segments=32, sides=22) {
-  const verts=[], idx=[];
+  const verts=[], uv=[], idx=[];
   for(let j=0;j<=segments;j++) {
     const f=j/segments*(rows.length-1), k=Math.min(rows.length-2,Math.floor(f)), u=f-k;
     const a=rows[Math.max(0,k-1)],b=rows[k],c=rows[k+1],d=rows[Math.min(rows.length-1,k+2)];
     const z=cubic(a[0],b[0],c[0],d[0],u), cy=cubic(a[1],b[1],c[1],d[1],u),
       rx=Math.max(.005,cubic(a[2],b[2],c[2],d[2],u)),ry=Math.max(.005,cubic(a[3],b[3],c[3],d[3],u));
-    for(let i=0;i<=sides;i++){const q=i/sides*TAU;verts.push(Math.cos(q)*rx,cy+Math.sin(q)*ry,z);}
+    for(let i=0;i<=sides;i++){const q=i/sides*TAU;verts.push(Math.cos(q)*rx,cy+Math.sin(q)*ry,z);uv.push(i/sides*3,j/segments*3.2);}
   }
   for(let j=0;j<segments;j++)for(let i=0;i<sides;i++) {
     const a=j*(sides+1)+i,b=a+sides+1;idx.push(a,a+1,b,b,a+1,b+1);
   }
-  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));g.setIndex(idx);g.computeVertexNormals();
-  return tint(g,upper,lower,-.25,.75);
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));g.setIndex(idx);g.computeVertexNormals();
+  smoothRingSeam(g,sides);return tint(g,upper,lower,-.25,.75);
 }
 // Bevelled organic fins: curves on a 2D plane, mapped to one of the animal's planes.
 function fin(commands,plane,hex,thickness=.05) {
@@ -96,7 +90,7 @@ function fin(commands,plane,hex,thickness=.05) {
     else if(plane==='xz')p.setXYZ(i,u,-w,v);
     else p.setXYZ(i,u,v,w);
   }
-  g.computeVertexNormals();return tint(g,hex);
+  g.computeVertexNormals();return tint(g,hex,0x96ad99,-.16,.55);
 }
 function eyes(group, x,y,z,scale=.1, gold=0x101d22) {
   const parts=[];
@@ -107,23 +101,24 @@ function eyes(group, x,y,z,scale=.1, gold=0x101d22) {
   mesh(group,merge(parts),materials().eye);
 }
 // Update a tapered tube from a centre-line without allocations or computeVertexNormals.
-function dynamicTube(segments,sides,sample,radius,upper,lower=upper) {
+function dynamicTube(segments,sides,sample,radius,upper,lower=upper,ridge=0) {
   const centers=new Float32Array((segments+1)*3),rs=new Float32Array(segments+1);
-  const p=new Float32Array((segments+1)*(sides+1)*3),n=new Float32Array(p.length),idx=[];
+  const p=new Float32Array((segments+1)*(sides+1)*3),n=new Float32Array(p.length),uv=new Float32Array((segments+1)*(sides+1)*2),idx=[];
+  for(let j=0;j<=segments;j++)for(let k=0;k<=sides;k++){const o=(j*(sides+1)+k)*2;uv[o]=k/sides*2;uv[o+1]=j/segments*4;}
   const cos=new Float32Array(sides+1),sin=new Float32Array(sides+1);
   for(let k=0;k<=sides;k++){cos[k]=Math.cos(k/sides*TAU);sin[k]=Math.sin(k/sides*TAU);}
   for(let j=0;j<segments;j++)for(let k=0;k<sides;k++){
     const a=j*(sides+1)+k,b=a+sides+1;idx.push(a,a+1,b,b,a+1,b+1);
   }
   const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(p,3).setUsage(THREE.DynamicDrawUsage));
-  g.setAttribute('normal',new THREE.BufferAttribute(n,3).setUsage(THREE.DynamicDrawUsage));g.setIndex(idx);
+  g.setAttribute('normal',new THREE.BufferAttribute(n,3).setUsage(THREE.DynamicDrawUsage));g.setAttribute('uv',new THREE.BufferAttribute(uv,2));g.setIndex(idx);
   function update(t) {
     for(let j=0;j<=segments;j++){sample(j/segments,t,centers,j*3);rs[j]=radius(j/segments);}
     let lastNx=0,lastNy=0,lastNz=0;
     for(let j=0;j<=segments;j++) {
       const prev=Math.max(0,j-1)*3,next=Math.min(segments,j+1)*3;
       let tx=centers[next]-centers[prev],ty=centers[next+1]-centers[prev+1],tz=centers[next+2]-centers[prev+2];
-      let inv=1/(Math.hypot(tx,ty,tz)||1);tx*=inv;ty*=inv;tz*=inv;
+      let inv=1/(Math.hypot(tx,ty,tz)||1),slope=(rs[Math.min(segments,j+1)]-rs[Math.max(0,j-1)])*inv;tx*=inv;ty*=inv;tz*=inv;
       // Parallel transport removes sudden frame flips on the creature's curved neck/arms.
       let nx,ny,nz;
       if(j===0){nx=-tz;ny=0;nz=tx;if(Math.hypot(nx,nz)<.00001){nx=1;ny=0;nz=0;}}
@@ -134,8 +129,10 @@ function dynamicTube(segments,sides,sample,radius,upper,lower=upper) {
       for(let k=0;k<=sides;k++) {
         const o=(j*(sides+1)+k)*3;
         const dx=nx*cos[k]+bx*sin[k],dy=ny*cos[k]+by*sin[k],dz=nz*cos[k]+bz*sin[k];
-        p[o]=centers[j*3]+dx*rs[j];p[o+1]=centers[j*3+1]+dy*rs[j];p[o+2]=centers[j*3+2]+dz*rs[j];
-        n[o]=dx;n[o+1]=dy;n[o+2]=dz;
+        const r=rs[j]*(1+ridge*Math.cos(k/sides*TAU*3+j*.63));
+        p[o]=centers[j*3]+dx*r;p[o+1]=centers[j*3+1]+dy*r;p[o+2]=centers[j*3+2]+dz*r;
+        const nl=1/Math.hypot(dx-tx*slope,dy-ty*slope,dz-tz*slope);
+        n[o]=(dx-tx*slope)*nl;n[o+1]=(dy-ty*slope)*nl;n[o+2]=(dz-tz*slope)*nl;
       }
     }
     g.attributes.position.needsUpdate=true;g.attributes.normal.needsUpdate=true;
@@ -212,16 +209,17 @@ function shark() {
 function kraken() {
   const root=new THREE.Group(),group=new THREE.Group();root.add(group);const top=palette.kraken[0],bottom=palette.kraken[1];
   const mantlePivot=new THREE.Group();group.add(mantlePivot);
-  const mantle=loft([[-1.9,0,.012,.012],[-1.65,0,.5,.47],[-1.2,0,.86,.75],[-.65,0,.89,.71],[-.12,0,.58,.5],[.18,0,.46,.35]],top,bottom,25,24);
-  mantle.rotateX(Math.PI/2);mantle.translate(0,.08,0);tint(mantle,top,0xbd6b76,-.1,1.9);mesh(mantlePivot,mantle);
+  const mantle=loft([[-2.04,0,.012,.012],[-1.72,0,.35,.32],[-1.2,0,.75,.69],[-.65,0,.87,.68],[-.12,0,.59,.47],[.18,0,.46,.35]],top,bottom,25,24);
+  mantle.rotateX(Math.PI/2);mantle.translate(0,.08,0);sculptSurface(mantle,.024);smoothRingSeam(mantle,24);tint(mantle,top,0xb9696e,-.1,1.9);mesh(mantlePivot,mantle,materials().mantle);
   const arms=[],samples=[],colliders=[proxy(0,.94,0,.72,.92,.63,'mantle')],clock=swimClock(1.1,.23),tmp=new Float32Array(3),matrix=new THREE.Matrix4();
-  const suckers=new THREE.InstancedMesh(tint(new THREE.SphereGeometry(1,8,5),0xde9e88),materials().skin,56);group.add(suckers);suckers.instanceMatrix.setUsage(THREE.DynamicDrawUsage);suckers.frustumCulled=false;
+  const suckerGeometry=new THREE.TorusGeometry(.66,.24,5,8).rotateX(Math.PI/2);
+  const suckers=new THREE.InstancedMesh(tint(suckerGeometry,0xd8ac91),materials().mantle,56);suckers.castShadow=true;suckers.receiveShadow=true;group.add(suckers);suckers.instanceMatrix.setUsage(THREE.DynamicDrawUsage);suckers.frustumCulled=false;
   for(let i=0;i<8;i++) {
     const a=i/8*TAU+.16,cs=Math.cos(a),sn=Math.sin(a),delay=i*.71;
     const sample=(u,t,out,o)=>{const bend=Math.sin(t-u*5.2-delay),reach=.48+u*(2.8+.24*Math.cos(t-delay-u*3));
       const side=u*u*(.45+Math.sin(t-u*5-delay)*.7);
       out[o]=cs*reach-sn*side;out[o+1]=-.04+Math.sin(u*Math.PI)*(.52+.32*bend)+Math.pow(u,2)*(.25+.58*Math.sin(t-u*4.4-delay));out[o+2]=sn*reach+cs*side;};
-    const arm=dynamicTube(25,9,sample,u=>.28*Math.pow(1-u,.8)+.016,top,bottom);mesh(group,arm.geometry);arms.push(arm);samples.push(sample);
+    const arm=dynamicTube(25,9,sample,u=>.28*Math.pow(1-u,.8)+.016,top,bottom,.055);mesh(group,arm.geometry,materials().mantle);arms.push(arm);samples.push(sample);
     for(let j=1;j<=5;j++)colliders.push(proxy(0,0,0,.26,.2,.26,'tentacle'));
   }
   const pupils=[];for(const sign of [-1,1]){pupils.push(ellipsoid(sign*.32,.49,-.595,.135,.145,.075,0xf7bf63,12));pupils.push(ellipsoid(sign*.32,.49,-.666,.031,.097,.019,0x21162b,10));pupils.push(ellipsoid(sign*.293,.535,-.68,.019,.025,.01,0xffffff,8,6));}mesh(mantlePivot,merge(pupils),materials().eye);
@@ -229,7 +227,7 @@ function kraken() {
   return{group:root,radius:3.5,height:2,label:'KRAKEN',getColliders(){return colliders;},inspect,animate(t,speed=2){const phase=clock(t,speed),pulse=Math.sin(phase);mantlePivot.scale.set(1-pulse*.085,1+pulse*.095,1-pulse*.085);
     colliders[0].y=.94*mantlePivot.scale.y;colliders[0].rx=.72*mantlePivot.scale.x;colliders[0].ry=.92*mantlePivot.scale.y;colliders[0].rz=.63*mantlePivot.scale.z;
     let si=0,ci=1;
-    for(let i=0;i<8;i++){arms[i].update(phase);for(let j=3;j<18;j+=2){const u=j/25;samples[i](u,phase,tmp,0);const size=.075*(1-u)+.025;matrix.makeScale(size,.037,size);matrix.setPosition(tmp[0],tmp[1]+.16*(1-u),tmp[2]);suckers.setMatrixAt(si++,matrix);}
+    for(let i=0;i<8;i++){arms[i].update(phase);for(let j=3;j<17;j+=2){const u=j/25;samples[i](u,phase,tmp,0);const size=.075*(1-u)+.025;matrix.makeScale(size,.10,size);matrix.setPosition(tmp[0],tmp[1]+.28*Math.pow(1-u,.8)+.003,tmp[2]);suckers.setMatrixAt(si++,matrix);}
       for(let j=1;j<=5;j++){const u=j*.16;samples[i](u,phase,tmp,0);const c=colliders[ci++],r=.28*Math.pow(1-u,.8)+.016;c.x=tmp[0];c.y=tmp[1];c.z=tmp[2];c.rx=c.rz=r+.095;c.ry=r;}}
     suckers.instanceMatrix.needsUpdate=true;inspect.phase=phase;inspect.mantleScale=mantlePivot.scale.y;samples[0](1,phase,tmp,0);inspect.tentacleTipX=tmp[0];}};
 }
@@ -239,8 +237,8 @@ function seaSerpent() {
   const sample=(u,t,out,o)=>{const lift=Math.pow(Math.max(0,(u-.64)/.36),1.55);
     out[o]=Math.sin(u*TAU-t)*1.35*(1-u*.58);out[o+1]=-.22+Math.sin(u*Math.PI*4-t*.68)*.3+lift*2.2;out[o+2]=3.5-u*5.5;};
   const radius=u=>(.035+Math.sin(Math.min(1,u*1.7)*Math.PI*.5)*.43)*(1-.18*u);
-  const body=dynamicTube(62,15,sample,radius,top,belly);
-  mesh(group,body.geometry);
+  const body=dynamicTube(62,15,sample,radius,top,belly,.025);
+  mesh(group,body.geometry,materials().reptile);
   const head=new THREE.Group();head.position.set(0,1.98,-2);group.add(head);
   const headParts=[loft([[-1.35,-.03,.025,.02],[-1.15,.015,.35,.18],[-.72,.11,.48,.32],[-.2,.06,.39,.37],[.28,-.12,.26,.28]],top,belly,23,20)];
   for(const s of [-1,1]) {
@@ -249,7 +247,7 @@ function seaSerpent() {
     headParts.push(pathTube([[s*.23,.29,.08],[s*.36,.6,.20],[s*.33,.88,.34]],.063,0xc0c697,7));
     headParts.push(pathTube([[s*.36,-.10,-.96],[s*.37,-.13,-.65],[s*.32,-.11,-.35]],.025,0x193e3c,6));
   }
-  mesh(head,merge(headParts));eyes(head,.44,.22,-.55,.14,0xe0bf59);
+  mesh(head,merge(headParts),materials().reptile);eyes(head,.44,.22,-.55,.14,0xe0bf59);
   const features=[];for(const s of [-1,1]){
     features.push(ellipsoid(s*.506,.22,-.56,.014,.086,.038,0x142d2d,10));
     features.push(ellipsoid(s*.21,.16,-1.13,.045,.025,.022,0x234943,10));
@@ -259,7 +257,7 @@ function seaSerpent() {
     const u=i/14,x=Math.sin(u*TAU)*1.5*(1-u*.55),y=-.22+Math.sin(u*Math.PI*4)*.4+Math.pow(Math.max(0,(u-.64)/.36),1.55)*2.2,z=3.5-u*5.5;
     const g=fin([['moveTo',-.14,0],['quadraticCurveTo',-.09,.31,.08,.54],['quadraticCurveTo',.16,.2,.36,0],['lineTo',-.14,0]],'zy',0x86aaa0,.028);
     g.translate(x,y+.29,z);crest.push(g);
-  }const crestPivot=new THREE.Group();group.add(crestPivot);mesh(crestPivot,merge(crest));const crestSurfaces=flattenSurface(crestPivot),clock=swimClock(1.25,.3),tmp=new Float32Array(3),prev=new Float32Array(3);
+  }const crestPivot=new THREE.Group();group.add(crestPivot);mesh(crestPivot,merge(crest),materials().reptile);const crestSurfaces=flattenSurface(crestPivot),clock=swimClock(1.25,.3),tmp=new Float32Array(3),prev=new Float32Array(3);
   const colliders=[];for(let i=1;i<=11;i++){const u=i/12;colliders.push(proxy(0,0,0,radius(u)*.92,radius(u)*.92,.30,'body'));}colliders.push(proxy(0,0,0,.40,.30,.58,'head'));
   const inspect={phase:0,headX:0,tailX:0};
   return {group:root,radius:3.15,height:3.1,label:'THỦY QUÁI',forwardAxis:'-Z',getColliders(){return colliders;},inspect,animate(t,speed=2){const phase=clock(t,speed);body.update(phase);sample(1,phase,tmp,0);head.position.set(tmp[0],tmp[1],tmp[2]);sample(.965,phase,prev,0);head.rotation.y=THREE.MathUtils.clamp(Math.atan2(-(tmp[0]-prev[0]),prev[2]-tmp[2]),-.6,.6);head.rotation.z=Math.sin(phase)*.06;
@@ -273,7 +271,7 @@ function jellyfish() {
   for(let j=0;j<=rings;j++) {
     const v=j/rings,theta=v*Math.PI*.51;
     for(let i=0;i<=seg;i++){
-      const a=i/seg*TAU,r=Math.sin(theta)*1.18*(1+.027*Math.cos(a*12)*v*v);
+      const a=i/seg*TAU,r=Math.sin(theta)*1.18*(1+.05*Math.cos(a*12)*v*v*v);
       verts.push(Math.cos(a)*r,.45+Math.cos(theta)*1.32+.035*Math.sin(a*12)*v*v,Math.sin(a)*r);
     }
   }

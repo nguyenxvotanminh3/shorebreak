@@ -1,4 +1,4 @@
-SHOREBREAK 4.1 — SURF OR SPLAT
+SHOREBREAK 4.2 — SURF OR SPLAT
 
 Game lướt sóng 3D chạy vô tận. Né chướng ngại, bật sóng và biểu diễn trên ván để tăng điểm. Không có giới hạn 90 giây; nhấn P, chọn Chốt điểm lượt này khi muốn kết thúc.
 
@@ -6,7 +6,7 @@ Game lướt sóng 3D chạy vô tận. Né chướng ngại, bật sóng và bi
 A / D hoặc ← / →: nghiêng và né trái phải.
 W hoặc ↑: lấy đà khi xuống mặt sóng.
 Space: giữ để nén ván, thả để nhảy. Nhảy khi có tốc độ và gần đỉnh sóng sẽ cao hơn.
-Giữ E trên không: aura farming với ba tư thế luân phiên — Chào sóng, Sky King, Chiến thắng. Bay qua chướng ngại trong tư thế này để nhận điểm aura.
+Giữ E: tạo dáng ngay khi lướt; trên không sẽ aura farming với ba tư thế luân phiên — Chào sóng, Sky King, Chiến thắng. Bay qua chướng ngại trong tư thế này để nhận điểm aura.
 Thả hướng trước khi tiếp nước để đáp đẹp. S hoặc ↓: giảm tốc. P / Esc: tạm dừng.
 Điện thoại: dùng nút trái, phải, lấy đà, bật sóng và AURA.
 
@@ -24,7 +24,7 @@ Cảnh xa có du thuyền, thuyền buồm, tàu container chạy ngang, wake, �
 
 ĐỒ HỌA VÀ MÔ HÌNH
 Three.js, biển shader đồng bộ công thức vật lý, nhân vật MakeHuman CC0 với 52 xương và IK giữ chân trên ván. Máy, quái vật, tàu và đảo là mô hình procedural nguyên bản. Giấy phép đi kèm trong assets/ và vendor/.
-Đồ họa tự thích nghi, có ba mức thủ công trong Cài đặt. Cần WebGL 2 và tăng tốc đồ họa. Hiệu năng còn phụ thuộc thiết bị và trình duyệt.
+Đồ họa tự thích nghi, có ba mức thủ công trong Cài đặt. Da sinh vật có vân màu, độ nhám và normal map procedural dùng chung; bóng tiếp xúc bám mặt sóng ở mọi mức. Cân bằng/Cao bật thêm bóng đổ và bóng tự thân 1024/2048; Tiết kiệm tắt shadow map. Cần WebGL 2 và tăng tốc đồ họa. Hiệu năng còn phụ thuộc thiết bị và trình duyệt.
 Đây là vật lý game và hoạt ảnh procedural, không phải mô phỏng chất lỏng đầy đủ hay motion capture.
 
 CHẠY MÃ NGUỒN
@@ -41,3 +41,7 @@ machines.js / kaiju.js / creatures.js / swimming.js: mô hình, hitbox và hoạ
 crash-fx.js / aura.js: hiệu ứng tái sử dụng.
 seascape.js / water.js: tàu thuyền, cảnh xa và mặt biển.
 game.js / index.html / style.css: vòng chơi, camera, điều khiển và giao diện.
+
+KIỂM TRA MÃ NGUỒN
+Node.js 24: node --test tests/*.test.mjs
+Bộ kiểm tra gồm vật lý, IK từ GLB thật, giữ/thả E, dừng hoạt ảnh, nguồn điều khiển và cấu trúc đồ họa. Không thay thế kiểm tra hình ảnh/GPU trong trình duyệt.
