@@ -17,7 +17,7 @@ export function startDive(s) { Object.assign(s,createDive(),{status:'playing'});
 export function clearMotion(s) { s.vx=s.vy=s.vz=0; s.sprinting=false; s.scanProgress=0; s.scanTarget=null; }
 export function triggerSonar(s) { if(s.status!=='playing'||s.sonarCooldown>0)return false; s.sonar=6;s.sonarCooldown=9;return true; }
 export function recoverDiver(s) { s.x=0;s.y=-1;s.z=18;s.yaw=0;s.pitch=-.22;s.oxygen=LIMITS.oxygen;s.health=100;s.scans=[...s.banked];s.rescues++;s.injuryCooldown=5;clearMotion(s);s.message={kind:'rescue',text:'DÂY CỨU HỘ ĐÃ KÉO BẠN LÊN',detail:'Dữ liệu chưa gửi đã mất. Những mẫu đã gửi vẫn còn.'}; }
-export function restoreProgress(s,save) { if(!save||save.version!==1||!Array.isArray(save.banked))return; s.banked=[...new Set(save.banked.filter(id=>LANDMARKS.some(p=>p.id===id)))];s.scans=[...s.banked];s.deepest=clamp(Number(save.deepest)||0,0,100); }
+export function restoreProgress(s,save) { if(!save||save.version!==1||!Array.isArray(save.banked))return; s.banked=[...new Set(save.banked.filter(id=>LANDMARKS.some(p=>p.id===id)))];s.scans=[...s.banked];s.completed=s.banked.length===LANDMARKS.length;s.deepest=clamp(Number(save.deepest)||0,0,100); }
 export function serializableProgress(s) { return {version:1,banked:[...s.banked],deepest:Math.round(s.deepest)}; }
 export function stepDive(s,input,dt,world) {
  if(s.status!=='playing'||dt<=0)return;

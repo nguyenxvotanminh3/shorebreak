@@ -1,70 +1,74 @@
 SHOREBREAK — VỰC LẶNG / verification report
-Date: 2026-10-02
+Updated: 2026-10-02 after actual Mac browser QA
 
 FINAL AUTOMATED RESULT
 node --test tests/*.test.mjs
-59 tests passed, 0 failed, 0 skipped. Includes 38 underwater checks and 21
-preserved surfing regression checks. Node.js 24.19.0.
-JavaScript syntax and git diff --check pass. Relative runtime imports/assets
-were checked on disk. This is a local prototype, not a deployed release.
+60 tests passed, 0 failed, 0 skipped: 39 underwater checks and 21 preserved
+surfing regression checks. Source checkout: Node.js 24.19.0; Mac: Node26.4.0.
+JavaScript syntax, relative runtime imports/assets and git diff --check pass.
+The code is on draft PR #3; no merge or deployed website is included.
 
-New simulation and world checks (23)
-- Starting/restoring progress without aliasing mutable state
-- First-person forward/strafe/vertical movement, diagonal normalization,
-  sprint oxygen cost and 30/60/120Hz plus jittered frame schedule equivalence
-- Surface ascent/refill/healing, bounds, cylinder pushout and slope re-clamp
-- Proximity/facing/sustained scan, release/cancel and target changes
-- Oxygen depletion, damage cooldown, rescue losing only unbanked data
-- Three-sample banking/completion at surface buoy and sonar cooldown
-- Keyboard aliases/opposites and independent multi-pointer ownership
-- ALL THREE physical objectives reachable/scannable/bankable in actual world
-- Actual diving bell has a navigable bottom entrance and restores oxygen
-- Finite actual Three geometry, matching shared terrain, bounded instancing
-- Tier particle/instance/light/culling reductions without reallocating
-- 2,400 world updates and 1,800 life updates with stable resource identities
-- Shader injection against real Three shader source (NOT GPU compilation)
-- Distance LOD loading, hysteresis, absolute animation time, failure behavior
-- Idempotent disposal, delayed GLB arrival after dispose and texture cleanup
-Route tests exclude creature threats. They prove level geometry/accessibility,
-not that all encounter difficulty has been balanced by playtesting.
+Simulation and world (23)
+- First-person movement, diagonal normalization, sprint oxygen cost and
+  fixed-step agreement across 30/60/120Hz plus jittered frame schedules
+- Surface refill/healing, bounds, cylinder pushout and slope floor re-clamp
+- Facing/proximity/held scan progress, release decay and target changes
+- Damage cooldown, recovery preserving only banked data, upload and completion
+- Sonar cooldown and independent keyboard/touch ownership
+- All three physical objectives reachable/scannable/bankable in actual world
+- Navigable real diving-bell entrance and oxygen refill inside its volume
+- Finite actual Three geometry, shared terrain, bounded instances and tiers
+- 2,400 world +1,800 life updates with stable mesh/material/buffer identities
+- Shared shader injection, LOD loading/hysteresis, absolute animation time
+- Resource cleanup, delayed GLB arrival after dispose and asset failures
+Geometry route tests exclude creature threats; they do not prove difficulty
+balance. Shader source injection is not itself GPU compilation.
 
-Application integration (9)
-Production abyss.js handlers and frame loop are executed with real world,
-life and simulation modules. The test replaces DOM, WebGLRenderer, AudioContext
-and GLTF loading with explicit stand-ins; it does NOT draw pixels.
-- Start, movement, keyboard look, mouse drag, granted/denied pointer lock
-- F/Q/E, scan interruption, actual input-driven trip to first sample and back
-- Bank, local save, continue, fresh start and malformed/denied storage
-- Pause/resume, dialogs, Escape, blur/visibility, home, frozen time and audio
-- Quality selection, sustained auto reduction, resize and sensitivity controls
-- Multiple touch/pointer cancellation and independent keyboard ownership
-- Repeated key after blur cannot re-latch; flashlight UI resets on new dive
-- WebGL context-loss error state
+Production application integration (10)
+Runs abyss.js with actual world/life/simulation and explicit DOM, WebGLRenderer,
+AudioContext and GLTF-loader stand-ins. This suite does not draw pixels.
+- Start, WASD/vertical/look, granted/denied pointer lock, drag fallback, F/Q/E
+- Input-driven first scan/return/bank, storage/continue, malformed/denied saves
+- Pause/dialogs/Escape/blur/visibility/home/resume, frozen simulation and audio
+- Quality/settings/auto reduction, resize, touch cancellation and ownership
+- Stale key-repeat and flashlight-reset regressions; context-loss handling
+- NEW: completed-save Continue restores completion immediately, avoids replaying
+  the completion notice, and fresh Start resets the objective normally
 
-Actual final GLB resources (6)
-Both full and web LOD variants of corrected v3 shark, kraken and kaiju parse
-through real GLTFLoader. Validated embedded buffer/image ranges, bones,
-normalized animation path, finite skinned vertices and pose bounds over time.
-Image textures are structurally checked, stripped only in Node parser tests
-because Node cannot provide image bitmap decoding. Creature authors separately
-rendered Blender/glTF round trips; those are model checks, not web-game checks.
-Manifest contains actual bytes, hashes, triangle counts, primitives and bones.
+Actual final GLBs (6)
+Full and lower-detail corrected-v3 shark, kraken and kaiju parse through actual
+GLTFLoader: embedded buffer/image ranges, bones and animated skinned positions
+are valid/finite. Node strips only bitmap material decoding; textures were
+structurally validated there. Subsequent real Mac WebGL QA successfully loaded
+all six asset states and rendered the creatures. Manifest records byte counts,
+hashes, triangles, primitives and bones, not a GPU performance guarantee.
 
-BROWSER / GPU STAGES THAT DID NOT RUN
-The installed local Chromium process cannot create its IPC socket. Both the
-normal launch and a supported approved escalation returned:
-  socket() failed: Operation not permitted
-The cloud preview route was also unavailable in the existing workflow. No
-security controls were bypassed, no public deployment was used as a workaround.
-Therefore this package has NO actual browser renderer screenshot, WebGL shader
-compilation result, GPU frame-time benchmark, real pointer-lock acceptance test
-or physical-phone/multitouch QA result. Browser tests above are stand-ins.
+ACTUAL MAC BROWSER QA
+Chrome154 / macOS27 / AppleM2 / real WebGL2 ANGLE Metal. See MAC-QA.md for
+method, evidence and limits. Actual pixels showed the title screen, terrain,
+caustics, plants, fish, HUD and textured/skinned creatures. No shader, WebGL
+or GLB-loading errors were observed in the completed route.
+Native clicks, drag and single F/Q presses worked. Sustained movement/scan used
+DOM KeyboardEvents on real canvas handlers because automation could not hold
+native keys; simulation/collisions/rendering remained real, with no teleport.
+All3scan objectives, surface and bell refill, return/upload, pause/resume,
+quality changes, reload and Continue were exercised. The Continue state bug
+was fixed and verified on the reloaded real page before source integration.
+An early window-targeted QA key probe caused one TypeError; the corrected
+canvas-targeted route had no further application-origin errors.
 
-NEXT REAL-DEVICE CHECKS
-- Start page / underwater scene / all three landmarks render without console errors
-- Hold WASD, drag fallback, pointer lock, touch look and simultaneous movement
-- Surface and bell refill, first scan, rescue, save+continue and three-sample finish
-- Near/far LOD transitions and corrected shark mouth in actual game lighting
-- Low/medium/high visuals, context-loss behavior and measured GPU/FPS on devices
+PERFORMANCE EVIDENCE
+7-second rAF samples at one stationary near-Warden view averaged:
+High55.44, Medium57.01, Low57.86 FPS. These are short frame-cadence samples,
+not GPU timings, whole-map results or a steady60FPS guarantee. An earlier
+moving reef sample was about48FPS. Detailed interval outliers/draw counts are
+in MAC-QA.md and concrete implementation budgets in PERFORMANCE.txt.
 
-No push, merge, deployment or remote publication was performed in this pass.
+REMAINING REAL-DEVICE CHECKS
+- Successful pointer-lock acceptance (automation stayed unlocked; drag worked)
+- Physical held keyboard events, phone/touch and audio output
+- Long-session/whole-map frame pacing, other hardware and browser combinations
+The cloud Chromium IPC restriction remains; its own integration tests use
+stand-ins. It no longer prevents reporting the separate actual Mac QA above.
+
+No merge or website deployment was performed.

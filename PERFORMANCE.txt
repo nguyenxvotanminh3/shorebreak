@@ -38,7 +38,13 @@ Not implemented / not verified
 No streaming terrain downloads, GPU occlusion queries, compressed KTX2 textures,
 Draco decode or custom meshopt pipeline. GLBs are embedded-image files and
 fetch only when useful; model counts are recorded in ASSET-MANIFEST.json.
-No browser/GPU/mobile FPS verification could run: Chromium launch is blocked
-by the execution environment's local IPC restrictions, including approved
-escalation. Node tests use actual geometry/skeletons and renderer stand-ins.
-The standalone game still needs actual browser/device review before release.
+Actual Mac browser QA now runs WebGL2 on Apple M2 / Chrome 154. Seven-second
+requestAnimationFrame samples near the Warden averaged 55.44 FPS High,
+57.01 Medium and 57.86 Low. End-of-sample draw calls / triangles were
+74 / 153,952; 68 / 95,290; 51 / 55,628 respectively. These are short frame
+cadence samples, not GPU timer queries or a whole-map benchmark. An earlier
+moving reef sample averaged about 48 FPS; there is no steady-60 guarantee.
+No physical-phone/touch, successful pointer-lock acceptance, native held-key
+or audio-output QA was performed. Cloud Chromium remains blocked by local
+IPC restrictions; its Node application tests still use renderer stand-ins.
+See MAC-QA.md for the actual-device method and exact limitations.

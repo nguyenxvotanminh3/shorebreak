@@ -3,7 +3,7 @@
   "date": "2026-10-02",
   "sharkRevision": "v3 corrected continuous jaw and subterminal mouth",
   "axis": "Y up, -Z forward",
-  "notes": "Counts extracted from embedded GLB contents; no browser GPU performance claim. Model studio renders were reviewed by asset authors; game renderer remains unverified.",
+  "notes": "Counts extracted from embedded GLB contents, not GPU timings. Model studio renders were reviewed by asset authors. Subsequent real Mac Chrome/WebGL2 QA loaded all six variants and rendered the creatures successfully; see MAC-QA.md for device, method and remaining limits.",
   "models": [
     {
       "file": "kraken-lod.glb",

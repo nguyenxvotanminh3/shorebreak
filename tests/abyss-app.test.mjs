@@ -322,6 +322,18 @@ test('preexisting progress restores on continue and malformed stored data cannot
   a.click('pause'); a.click('rescue'); a.frame(3); assert.deepEqual(a.state().banked, ['bell']); assert.deepEqual(a.state().scans, ['bell']);
 });
 
+test('regression: continuing a completed save immediately restores the free-exploration objective', async t => {
+  const storage = new Map([['shorebreak-abyss-progress', JSON.stringify({ version: 1, banked: ['glass', 'bell', 'rift'], deepest: 64 })]]);
+  const a = await app(t, { storage, pointerLock: 'unsupported' });
+  a.click('continue'); a.frame(3);
+  assert.deepEqual(a.state().banked, ['glass', 'bell', 'rift']);
+  assert.equal(a.get('mission-count').textContent, '03 / 03');
+  assert.equal(a.get('objective').textContent, 'Khảo sát hoàn tất · Tự do khám phá');
+  assert.equal(a.get('notice').querySelector('b').textContent, 'DÂY NỐI ĐÃ SẴN SÀNG', 'loading completed progress does not replay the completion notice');
+  a.click('pause'); a.click('home'); a.click('start'); a.frame(3);
+  assert.equal(a.get('objective').textContent, 'Thu ba mẫu dữ liệu và trở về phao', 'a fresh dive still resets completion');
+});
+
 test('regression: repeated movement key after blur/resume must not resurrect the cleared hold', async t => {
   const a = await app(t); a.click('start'); a.key('keydown', 'KeyW'); a.frame(20); a.fire(a.window, 'blur');
   a.click('resume'); const before = a.state().position; a.key('keydown', 'KeyW', true); a.frame(35);

@@ -14,14 +14,16 @@ Không cài dependencies, không build, không dịch vụ bên ngoài.
 Hoặc: python3 -m http.server 4173 --directory dist
 Không mở index.html bằng file:// vì trình duyệt chặn ES modules/GLB.
 Có thể đưa toàn bộ dist/ lên dịch vụ static HTTPS khi muốn xuất bản.
-Bản này chưa được push, merge hay triển khai lên website công khai.
+Nguồn đã có trong draft PR #3; chưa merge hoặc triển khai website công khai.
+https://github.com/nguyenxvotanminh3/shorebreak/pull/3
 
 ĐIỀU KHIỂN
 W / A / S / D: bơi theo hướng nhìn; di chuyển có quán tính nhẹ.
 Chuột: nhìn quanh khi khóa con trỏ. Nếu trình duyệt từ chối khóa, kéo chuột
 trên cảnh hoặc dùng phím mũi tên. Nút Khóa chuột cho phép thử lại chủ động.
 Space: nổi lên. Ctrl hoặc C: lặn xuống. Shift: bơi nhanh, tốn oxy hơn.
-Giữ E: quét khối dữ liệu ở gần, trong tầm nhìn, liên tục 2,5 giây.
+Giữ E: quét khối dữ liệu ở gần, trong tầm nhìn; giữ đủ 2,5 giây để hoàn tất.
+Khi nhả E hoặc mất mục tiêu, tiến độ quét giảm dần; đổi mục tiêu sẽ đặt lại.
 F: đèn pin. Q: sonar, hiện mục tiêu xa và xung âm; hồi sau 9 giây.
 P / Esc: tạm dừng. Trình duyệt mất focus/chuyển tab cũng tạm dừng.
 Điện thoại: nút trái để di chuyển, vuốt vùng cảnh trống để nhìn, các nút
@@ -60,7 +62,9 @@ TỐI ƯU CỤ THỂ
 Chi tiết ngân sách từng model nằm trong dist/assets/abyss/ASSET-MANIFEST.json.
 Không có hệ thống streaming địa hình từ server: ô cảnh được dựng một lần rồi
 culling. Các model LOD tải theo khoảng cách và giữ lại để tránh tải lặp.
-Chưa đo GPU/FPS trên trình duyệt thật hoặc điện thoại, không bảo đảm tốc độ.
+Đã chạy Chrome/WebGL2 thật trên Apple M2: mẫu rAF 7 giây ở một góc nhìn đạt
+khoảng 55,4 / 57,0 / 57,9 FPS (Cao / Cân bằng / Tiết kiệm). Đây không phải đo
+GPU hoặc toàn bản đồ; chưa thử điện thoại và không bảo đảm 60 FPS ổn định.
 
 CẤU TRÚC
 index.html / abyss.css: giao diện visor, menu và điều khiển chạm.
@@ -74,6 +78,6 @@ trước đó. Chúng không chạy trong chuyến lặn mới.
 
 KIỂM TRA
 node --test tests/*.test.mjs
-Đọc TESTING.txt để phân biệt những gì đã kiểm bằng code và kiểm trình duyệt
-vẫn bị chặn. Bản prototype có nguồn mở để chỉnh sửa, chưa phải bản phát hành
-đã qua QA đa thiết bị.
+Đọc TESTING.txt và MAC-QA.md để phân biệt kiểm tra tự động, những gì đã chạy
+trên Mac thật và các giới hạn còn lại. Bản prototype có nguồn để chỉnh sửa,
+chưa phải bản phát hành đã qua QA đa thiết bị.
