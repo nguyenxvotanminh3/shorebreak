@@ -42,3 +42,9 @@ BẢN NÂNG CẤP 2.0
 Nhân vật MakeHuman liền mạch với 52 xương, khuôn mặt, bàn tay/ngón tay, chân và wetsuit. Hoạt ảnh procedural gồm nén, duỗi khi bật, co chân/giữ rail, mở người chuẩn bị đáp và nén gối khi tiếp nước. Tham khảo ảnh và hướng dẫn VĐV chuyên nghiệp, không phải motion capture.
 Cá mập, Kraken, thủy quái và sứa là chướng ngại vật có va chạm. Né trái/phải hoặc bật qua sinh vật thấp; có cảnh báo khoảng cách và điểm thưởng.
 Bài kiểm tra full charge trên mặt sóng đạt khoảng 4,6 m và 1,9 giây trên không. Đây là thông số thiết kế game; không phải đo đạc vận động viên.
+
+BẢN NÂNG CẤP 3.0
+Chân bám cố định trên ván; khuỷu tay có độ gập, vai và hông xoay đối ứng; chuyển trọng tâm, giữ rail và hấp thụ tiếp nước mềm hơn.
+Sinh vật bơi theo đường riêng, quay đầu theo hướng bơi, có vệt nước; thân, đuôi, vây, xúc tu và chuông sứa chuyển động rõ theo nhịp.
+Va chạm dùng nhiều ellipsoid nhỏ theo thân/vây/xúc tu và kiểm tra đường quét chuyển động của ván, thay vòng tròn lớn cố định. Cơ chế này cho phép né sát thân và tránh xuyên qua khi đi nhanh.
+swimming.js — đường bơi và vận tốc; collision.js — va chạm theo hình thể và đường quét.

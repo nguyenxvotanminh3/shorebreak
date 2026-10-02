@@ -146,6 +146,32 @@ function dynamicTube(segments,sides,sample,radius,upper,lower=upper) {
   return {geometry:g,update};
 }
 
+// Root transforms belong to gameplay. Only children/vertices move here.
+// Forward direction: shark and seaSerpent swim toward local -Z. Kraken/jelly are radial.
+function swimClock(base,gain=.25) {
+  let last=null,phase=0;
+  return (t,speed=2)=>{if(last===null)phase=t*base;else phase+=Math.max(0,Math.min(.15,t-last))*(base+Math.sqrt(Math.abs(speed)) * gain);last=t;return phase;};
+}
+function proxy(x,y,z,rx,ry,rz,part='body'){return{x,y,z,rx,ry,rz,part};}
+// Bake construction pivots once, then deform positions and normals in reusable arrays.
+function flattenSurface(group) {
+  group.updateMatrixWorld(true);const list=[];group.traverse(o=>{if(o.isMesh)list.push(o);});
+  return list.map(o=>{o.geometry.applyMatrix4(o.matrixWorld);group.add(o);o.position.set(0,0,0);o.rotation.set(0,0,0);o.scale.set(1,1,1);
+    const g=o.geometry;g.attributes.position.setUsage(THREE.DynamicDrawUsage);g.attributes.normal.setUsage(THREE.DynamicDrawUsage);
+    const base=new Float32Array(g.attributes.position.array),normal=new Float32Array(g.attributes.normal.array);g.computeBoundingSphere();g.boundingSphere.radius+=1.2;
+    return{g,base,normal};});
+}
+function deformSurfaces(surfaces,map,t) {
+  const q=deformScratch;
+  for(const {g,base,normal} of surfaces){const p=g.attributes.position.array,n=g.attributes.normal.array;
+    for(let i=0;i<base.length;i+=3){map(base[i],base[i+1],base[i+2],t,q);p[i]=q[0];p[i+1]=q[1];p[i+2]=q[2];
+      // Normal inverse transpose for the lateral travelling wave shear.
+      const nx=normal[i],ny=normal[i+1],nz=normal[i+2]-normal[i]*q[3],inv=1/(Math.hypot(nx,ny,nz)||1);
+      n[i]=nx*inv;n[i+1]=ny*inv;n[i+2]=nz*inv;}
+    g.attributes.position.needsUpdate=true;g.attributes.normal.needsUpdate=true;}
+}
+const deformScratch=new Float32Array(4);
+
 function shark() {
   const group=new THREE.Group(),[top,belly]=palette.shark,statics=[];
   statics.push(loft([[-3,.2,.02,.03],[-2.65,.26,.38,.23],[-2.1,.28,.66,.43],[-1.25,.31,.77,.58],[-.3,.28,.66,.57],[.8,.23,.4,.39],[1.65,.21,.18,.19],[2.13,.23,.12,.11]],top,belly));
@@ -169,48 +195,51 @@ function shark() {
   const tailParts=[loft([[0,0,.13,.12],[.35,0,.09,.11],[.7,.05,.025,.04]],top,belly,12,14),
     fin([['moveTo',.33,0],['bezierCurveTo',.5,.48,.75,1.01,1.32,1.56],['quadraticCurveTo',1.47,.9,1.04,.16],['quadraticCurveTo',.85,-.08,1.38,-1.04],['quadraticCurveTo',.82,-.9,.48,-.34],['quadraticCurveTo',.32,-.14,.33,0]],'zy',top,.065)];
   mesh(tail,merge(tailParts));
-  return {group,radius:2.35,height:1.9,label:'CÁ MẬP',animate(t){tail.rotation.y=Math.sin(t*3.9)*.24;group.rotation.z=Math.sin(t*1.5)*.025;}};
+  const surfaces=flattenSurface(group),clock=swimClock(2.05,.44),root=new THREE.Group();root.add(group);
+  const colliders=[proxy(0,.25,-2.2,.46,.33,.62,'head'),proxy(0,.3,-1.25,.68,.52,.72),proxy(0,.28,-.3,.59,.5,.65),proxy(0,.23,.73,.35,.31,.65),proxy(0,.23,1.63,.17,.18,.45,'tail')];
+  colliders.push(proxy(0,1.17,-.1,.075,.52,.3,'dorsal-fin'),proxy(0,.43,3.05,.1,1.04,.29,'tail-fin'));
+  for(const side of [-1,1]){colliders.push(proxy(side*1.1,.08,.0,.43,.08,.32,'pectoral-fin'));colliders.push(proxy(side*1.73,.13,.58,.32,.07,.28,'pectoral-fin'));}
+  const colliderBases=colliders.map(c=>[c.x,c.y,c.z]);
+  let phase=0;const inspect={phase:0,tailX:0,finFlap:0};
+  function sample(x,y,z,t,out){const u=THREE.MathUtils.clamp((z+2.7)/6.2,0,1),a=.025+.72*u*u,w=t-z*1.12;
+    out[0]=x+a*Math.sin(w);out[1]=y+Math.sin(t*.62)*.06+Math.max(0,Math.abs(x)-.75)*Math.sin(t*.72+Math.sign(x)*.6)*.17;out[2]=z;
+    out[3]=(1.44*u/6.2)*Math.sin(w)-1.12*a*Math.cos(w);}
+  function updateColliders(){for(let i=0;i<colliders.length;i++){const c=colliders[i],b=colliderBases[i];sample(b[0],b[1],b[2],phase,deformScratch);c.x=deformScratch[0];c.y=deformScratch[1];}}
+  return {group:root,radius:2.35,height:1.9,label:'CÁ MẬP',forwardAxis:'-Z',getColliders(){return colliders;},inspect,
+    animate(t,speed=2){phase=clock(t,speed);deformSurfaces(surfaces,sample,phase);updateColliders();inspect.phase=phase;sample(0,0,3.25,phase,deformScratch);inspect.tailX=deformScratch[0];inspect.finFlap=Math.sin(phase*.72)*.17;}};
 }
 
 function kraken() {
-  const group=new THREE.Group(),top=palette.kraken[0],bottom=palette.kraken[1];
-  // Rotated loft gives a continuous pear-shaped mantle instead of a stack of primitives.
+  const root=new THREE.Group(),group=new THREE.Group();root.add(group);const top=palette.kraken[0],bottom=palette.kraken[1];
+  const mantlePivot=new THREE.Group();group.add(mantlePivot);
   const mantle=loft([[-1.9,0,.012,.012],[-1.65,0,.5,.47],[-1.2,0,.86,.75],[-.65,0,.89,.71],[-.12,0,.58,.5],[.18,0,.46,.35]],top,bottom,25,24);
-  mantle.rotateX(Math.PI/2);mantle.translate(0,.08,0);tint(mantle,top,0xbd6b76,-.1,1.9);mesh(group,mantle);
-  const arms=[];
+  mantle.rotateX(Math.PI/2);mantle.translate(0,.08,0);tint(mantle,top,0xbd6b76,-.1,1.9);mesh(mantlePivot,mantle);
+  const arms=[],samples=[],colliders=[proxy(0,.94,0,.72,.92,.63,'mantle')],clock=swimClock(1.1,.23),tmp=new Float32Array(3),matrix=new THREE.Matrix4();
+  const suckers=new THREE.InstancedMesh(tint(new THREE.SphereGeometry(1,8,5),0xde9e88),materials().skin,56);group.add(suckers);suckers.instanceMatrix.setUsage(THREE.DynamicDrawUsage);suckers.frustumCulled=false;
   for(let i=0;i<8;i++) {
-    const a=i/8*TAU+.16,cs=Math.cos(a),sn=Math.sin(a),phase=i*1.67;
-    const arm=dynamicTube(25,9,(u,t,out,o)=>{
-      const reach=.48+u*3.05, curl=Math.pow(u,3)*.68;
-      const wiggle=Math.sin(u*7.5-t*1.25+phase)*.15*u;
-      out[o]=cs*reach-sn*(curl+wiggle);
-      out[o+1]=-.03+Math.sin(u*Math.PI)*(.66+(i%3)*.14)-u*.45+Math.sin(t*1.1+phase+u*5)*.07*u;
-      out[o+2]=sn*reach+cs*(curl+wiggle);
-    },u=>.28*Math.pow(1-u,.8)+.016,top,bottom);
-    const am=mesh(group,arm.geometry);arms.push(arm);
-    // Suckers form a single merged mesh per arm; it follows the slow arm wave as a group.
-    const suckers=[];
-    for(let j=3;j<18;j+=2){const u=j/25,r=.48+u*3.05,curl=Math.pow(u,3)*.68;
-      const y=-.03+Math.sin(u*Math.PI)*(.66+(i%3)*.14)-u*.45;
-      suckers.push(ellipsoid(cs*r-sn*curl,y+.16*(1-u),sn*r+cs*curl,.075*(1-u)+.025,.037,.075*(1-u)+.025,0xde9e88,8,5));}
-    const sm=mesh(group,merge(suckers));sm.userData.phase=phase;am.frustumCulled=true;
+    const a=i/8*TAU+.16,cs=Math.cos(a),sn=Math.sin(a),delay=i*.71;
+    const sample=(u,t,out,o)=>{const bend=Math.sin(t-u*5.2-delay),reach=.48+u*(2.8+.24*Math.cos(t-delay-u*3));
+      const side=u*u*(.45+Math.sin(t-u*5-delay)*.7);
+      out[o]=cs*reach-sn*side;out[o+1]=-.04+Math.sin(u*Math.PI)*(.52+.32*bend)+Math.pow(u,2)*(.25+.58*Math.sin(t-u*4.4-delay));out[o+2]=sn*reach+cs*side;};
+    const arm=dynamicTube(25,9,sample,u=>.28*Math.pow(1-u,.8)+.016,top,bottom);mesh(group,arm.geometry);arms.push(arm);samples.push(sample);
+    for(let j=1;j<=5;j++)colliders.push(proxy(0,0,0,.26,.2,.26,'tentacle'));
   }
-  const pupils=[];for(const s of [-1,1]){
-    pupils.push(ellipsoid(s*.32,.49,-.595,.135,.145,.075,0xf7bf63,12));
-    pupils.push(ellipsoid(s*.32,.49,-.666,.031,.097,.019,0x21162b,10));
-    pupils.push(ellipsoid(s*.293,.535,-.68,.019,.025,.01,0xffffff,8,6));
-  }mesh(group,merge(pupils),materials().eye);
-  return {group,radius:3.5,height:2,label:'KRAKEN',animate(t){for(const a of arms)a.update(t);group.rotation.y=Math.sin(t*.25)*.06;}};
+  const pupils=[];for(const sign of [-1,1]){pupils.push(ellipsoid(sign*.32,.49,-.595,.135,.145,.075,0xf7bf63,12));pupils.push(ellipsoid(sign*.32,.49,-.666,.031,.097,.019,0x21162b,10));pupils.push(ellipsoid(sign*.293,.535,-.68,.019,.025,.01,0xffffff,8,6));}mesh(mantlePivot,merge(pupils),materials().eye);
+  const inspect={phase:0,tentacleTipX:0,mantleScale:1};
+  return{group:root,radius:3.5,height:2,label:'KRAKEN',getColliders(){return colliders;},inspect,animate(t,speed=2){const phase=clock(t,speed),pulse=Math.sin(phase);mantlePivot.scale.set(1-pulse*.085,1+pulse*.095,1-pulse*.085);
+    colliders[0].y=.94*mantlePivot.scale.y;colliders[0].rx=.72*mantlePivot.scale.x;colliders[0].ry=.92*mantlePivot.scale.y;colliders[0].rz=.63*mantlePivot.scale.z;
+    let si=0,ci=1;
+    for(let i=0;i<8;i++){arms[i].update(phase);for(let j=3;j<18;j+=2){const u=j/25;samples[i](u,phase,tmp,0);const size=.075*(1-u)+.025;matrix.makeScale(size,.037,size);matrix.setPosition(tmp[0],tmp[1]+.16*(1-u),tmp[2]);suckers.setMatrixAt(si++,matrix);}
+      for(let j=1;j<=5;j++){const u=j*.16;samples[i](u,phase,tmp,0);const c=colliders[ci++],r=.28*Math.pow(1-u,.8)+.016;c.x=tmp[0];c.y=tmp[1];c.z=tmp[2];c.rx=c.rz=r+.095;c.ry=r;}}
+    suckers.instanceMatrix.needsUpdate=true;inspect.phase=phase;inspect.mantleScale=mantlePivot.scale.y;samples[0](1,phase,tmp,0);inspect.tentacleTipX=tmp[0];}};
 }
 
 function seaSerpent() {
-  const group=new THREE.Group(),[top,belly]=palette.serpent;
-  const body=dynamicTube(62,15,(u,t,out,o)=>{
-    const lift=Math.pow(Math.max(0,(u-.64)/.36),1.55);
-    out[o]=Math.sin(u*TAU)*1.5*(1-u*.55)+Math.sin(u*10-t*1.35)*.10*Math.sin(u*Math.PI);
-    out[o+1]=-.22+Math.sin(u*Math.PI*4)*.4+lift*2.2;
-    out[o+2]=3.5-u*5.5;
-  },u=>(.035+Math.sin(Math.min(1,u*1.7)*Math.PI*.5)*.43)*(1-.18*u),top,belly);
+  const root=new THREE.Group(),group=new THREE.Group(),[top,belly]=palette.serpent;root.add(group);
+  const sample=(u,t,out,o)=>{const lift=Math.pow(Math.max(0,(u-.64)/.36),1.55);
+    out[o]=Math.sin(u*TAU-t)*1.35*(1-u*.58);out[o+1]=-.22+Math.sin(u*Math.PI*4-t*.68)*.3+lift*2.2;out[o+2]=3.5-u*5.5;};
+  const radius=u=>(.035+Math.sin(Math.min(1,u*1.7)*Math.PI*.5)*.43)*(1-.18*u);
+  const body=dynamicTube(62,15,sample,radius,top,belly);
   mesh(group,body.geometry);
   const head=new THREE.Group();head.position.set(0,1.98,-2);group.add(head);
   const headParts=[loft([[-1.35,-.03,.025,.02],[-1.15,.015,.35,.18],[-.72,.11,.48,.32],[-.2,.06,.39,.37],[.28,-.12,.26,.28]],top,belly,23,20)];
@@ -230,12 +259,16 @@ function seaSerpent() {
     const u=i/14,x=Math.sin(u*TAU)*1.5*(1-u*.55),y=-.22+Math.sin(u*Math.PI*4)*.4+Math.pow(Math.max(0,(u-.64)/.36),1.55)*2.2,z=3.5-u*5.5;
     const g=fin([['moveTo',-.14,0],['quadraticCurveTo',-.09,.31,.08,.54],['quadraticCurveTo',.16,.2,.36,0],['lineTo',-.14,0]],'zy',0x86aaa0,.028);
     g.translate(x,y+.29,z);crest.push(g);
-  }mesh(group,merge(crest));
-  return {group,radius:3.15,height:3.1,label:'THỦY QUÁI',animate(t){body.update(t);head.rotation.z=Math.sin(t*1.1)*.035;head.rotation.y=Math.sin(t*.75)*.055;}};
+  }const crestPivot=new THREE.Group();group.add(crestPivot);mesh(crestPivot,merge(crest));const crestSurfaces=flattenSurface(crestPivot),clock=swimClock(1.25,.3),tmp=new Float32Array(3),prev=new Float32Array(3);
+  const colliders=[];for(let i=1;i<=11;i++){const u=i/12;colliders.push(proxy(0,0,0,radius(u)*.92,radius(u)*.92,.30,'body'));}colliders.push(proxy(0,0,0,.40,.30,.58,'head'));
+  const inspect={phase:0,headX:0,tailX:0};
+  return {group:root,radius:3.15,height:3.1,label:'THỦY QUÁI',forwardAxis:'-Z',getColliders(){return colliders;},inspect,animate(t,speed=2){const phase=clock(t,speed);body.update(phase);sample(1,phase,tmp,0);head.position.set(tmp[0],tmp[1],tmp[2]);sample(.965,phase,prev,0);head.rotation.y=THREE.MathUtils.clamp(Math.atan2(-(tmp[0]-prev[0]),prev[2]-tmp[2]),-.6,.6);head.rotation.z=Math.sin(phase)*.06;
+    deformSurfaces(crestSurfaces,(x,y,z,q,out)=>{const u=(3.5-z)/5.5;sample(u,q,tmp,0);out[0]=x+tmp[0]-Math.sin(u*TAU)*1.5*(1-u*.55);out[1]=y+tmp[1]-(-.22+Math.sin(u*Math.PI*4)*.4+Math.pow(Math.max(0,(u-.64)/.36),1.55)*2.2);out[2]=z;out[3]=0;},phase);
+    for(let i=0;i<11;i++){const c=colliders[i];sample((i+1)/12,phase,tmp,0);c.x=tmp[0];c.y=tmp[1];c.z=tmp[2];}const h=colliders[11];h.x=head.position.x-Math.sin(head.rotation.y)*.64;h.y=head.position.y+.08;h.z=head.position.z-Math.cos(head.rotation.y)*.64;inspect.phase=phase;inspect.headX=head.position.x;sample(0,phase,tmp,0);inspect.tailX=tmp[0];}};
 }
 
 function jellyfish() {
-  const group=new THREE.Group(),bellGroup=new THREE.Group();group.add(bellGroup);
+  const root=new THREE.Group(),group=new THREE.Group(),bellGroup=new THREE.Group();root.add(group);group.add(bellGroup);let rimScale=1,bob=0,bellHeight=1;
   const verts=[],idx=[],seg=40,rings=16;
   for(let j=0;j<=rings;j++) {
     const v=j/rings,theta=v*Math.PI*.51;
@@ -261,26 +294,33 @@ function jellyfish() {
   for(let i=0;i<12;i++){
     const a=i/12*TAU,cs=Math.cos(a),sn=Math.sin(a),length=1.65+(i%3)*.24;
     const tube=dynamicTube(21,6,(u,t,out,o)=>{
-      const sway=Math.sin(u*8-t*1.7+a)*.16*u;
-      out[o]=cs*(1.0+u*.12)+sway;out[o+1]=.44-u*length;
-      out[o+2]=sn*(1.0+u*.12)+Math.cos(u*7-t*1.3+a)*.13*u;
+      const sway=Math.sin(u*8-t*1.15+a)*.24*u;
+      out[o]=cs*(rimScale+u*.14)+sway;out[o+1]=.44*bellHeight+bob-u*length+Math.sin(t-u*4+a)*.09*u;
+      out[o+2]=sn*(rimScale+u*.14)+Math.cos(u*7-t*.95+a)*.23*u;
     },u=>.017+.015*(1-u),0xb6b8e9,0xe1bde5);
     mesh(group,tube.geometry,materials().glow);threads.push(tube);
   }
-  return {group,radius:1.65,height:1.9,label:'SỨA ĐỘC',animate(t){for(const p of threads)p.update(t);const pulse=Math.sin(t*2);bellGroup.scale.set(1+pulse*.045,1-pulse*.035,1+pulse*.045);}};
+  const clock=swimClock(1.7,.2),colliders=[proxy(0,1,0,1.12,.63,1.12,'bell'),proxy(0,.02,0,.72,.35,.72,'tentacles')],inspect={phase:0,bellScale:1,strokeHeight:0};
+  return {group:root,radius:1.65,height:1.9,label:'SỨA ĐỘC',getColliders(){return colliders;},inspect,animate(t,speed=1){const phase=clock(t,speed),pulse=Math.sin(phase);rimScale=1+pulse*.145;bellHeight=1-pulse*.14;bob=Math.cos(phase-.55)*.17;bellGroup.scale.set(rimScale,bellHeight,rimScale);bellGroup.position.y=bob;for(const p of threads)p.update(phase);colliders[0].y=1.04*bellHeight+bob;colliders[0].rx=colliders[0].rz=1.1*rimScale;colliders[0].ry=.64*bellHeight;colliders[1].y=.06+bob;inspect.phase=phase;inspect.bellScale=rimScale;inspect.strokeHeight=bob;}};
 }
 
 /** type: 'shark' | 'kraken' | 'seaSerpent' (or 'serpent') | 'jellyfish'.
- * animate(t) uses absolute time in seconds. Set position/heading on a parent anchor;
- * the returned group uses small local rotations for swimming motions. Shared materials
+ * animate(t, speed=2) takes elapsed seconds and world speed in metres/second.
+ * Root group position/rotation/scale are NEVER modified. Forward is local -Z.
+ * getColliders() returns stable local-space ellipsoids updated by the last animate;
+ * 120 Hz collisions can reuse 60 Hz samples (at most one visual frame stale).
+ * inspect exposes phase and visible motion samples for QA. Shared materials
  * must not be disposed per creature; geometries may be disposed when retiring a level.
  */
 export function createSeaCreature(type) {
+  let creature;
   switch(type){
-    case 'shark':return shark();
-    case 'kraken':return kraken();
-    case 'seaSerpent':case 'serpent':return seaSerpent();
-    case 'jellyfish':return jellyfish();
+    case 'shark':creature=shark();break;
+    case 'kraken':creature=kraken();break;
+    case 'seaSerpent':case 'serpent':creature=seaSerpent();break;
+    case 'jellyfish':creature=jellyfish();break;
     default:throw new Error(`Unknown sea creature: ${type}`);
   }
+  creature.animate(0,0); // Initialize collision centres before the first render/physics tick.
+  return creature;
 }

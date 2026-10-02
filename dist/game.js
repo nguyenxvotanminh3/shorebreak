@@ -1,8 +1,8 @@
 import * as THREE from './vendor/three.module.js';
 import {createOcean,sampleWater} from './water.js';
-import {createSurfer} from './surfer.js?v=2';
+import {createSurfer} from './surfer.js?v=3';
 import {FIXED_DT,resetPhysics,advancePhysics,beginWipeout} from './physics.js';
-import {createHazards} from './hazards.js';
+import {createHazards} from './hazards.js?v=3';
 const $=id=>document.getElementById(id),clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),lerp=(a,b,t)=>a+(b-a)*t;
 const isTouch=matchMedia('(pointer:coarse)').matches||navigator.maxTouchPoints>1||innerWidth<700;
 if(isTouch)document.body.classList.add('touch');
@@ -92,7 +92,7 @@ function step(dt){
 function updateVisual(dt,alpha=1){
  const v=renderState;for(const key of renderKeys)v[key]=lerp(previous[key]??state[key],state[key],alpha);
  const spinDelta=Math.atan2(Math.sin(state.spinAngle-previous.spinAngle),Math.cos(state.spinAngle-previous.spinAngle));v.spinAngle=previous.spinAngle+spinDelta*alpha;
- v.air=state.air;v.status=state.status;v.pump=controls.pump;v.landingImpact=state.landingImpact;
+ v.air=state.air;v.status=state.status;v.pump=controls.pump;v.landingImpact=state.landingImpact;v.acceleration=(state.speed-previous.speed)/FIXED_DT;
  ocean.update(v.oceanTime,v.x,v.z,state.wipe>0?0:v.speed);sampleWater(v.x,v.z,v.oceanTime,sample);
  surfer.rig.position.set(v.x,v.y,v.z);
  normal.set(v.nx,v.ny,v.nz).normalize();if(state.air)normal.lerp(worldUp,.96).normalize();
@@ -122,7 +122,7 @@ function frame(now){requestAnimationFrame(frame);if(document.hidden){lastTime=no
  measureTime+=rawDt;measureFrames++;if(measureTime>=2){state.fps=measureFrames/measureTime;if(state.quality==='auto'&&state.status==='playing'){if(state.fps<43){slowTime+=measureTime;fastTime=0;}else if(state.fps>57){fastTime+=measureTime;slowTime=0;}else{slowTime=fastTime=0;}if(slowTime>=4&&state.tier>0)applyTier(state.tier-1);else if(fastTime>=14&&state.tier<(isTouch?1:2))applyTier(state.tier+1);}measureTime=0;measureFrames=0;}
 }
 // Small read-only instrumentation allows reproducible performance and state checks.
-window.__SURF__={getState:()=>({...state,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,renderWidth:renderer.domElement.width,renderHeight:renderer.domElement.height,frames:frameCount,character:surfer.inspect(),obstacles:hazards.inspect()}),sampleWater:(x,z,t)=>sampleWater(x,z,t),version:'2.0.0'};
+window.__SURF__={getState:()=>({...state,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,renderWidth:renderer.domElement.width,renderHeight:renderer.domElement.height,frames:frameCount,character:surfer.inspect(),obstacles:hazards.inspect()}),sampleWater:(x,z,t)=>sampleWater(x,z,t),version:'3.0.0'};
 try{const context=document.modelContext;if(context?.registerTool){const lifeCycle=new AbortController();const register=tool=>Promise.resolve(context.registerTool(tool,{signal:lifeCycle.signal})).catch(()=>{});register({name:'read_surf_session',description:'Read the current surfing session score, speed and status.',inputSchema:{type:'object',properties:{},additionalProperties:false},annotations:{readOnlyHint:true},execute(input){if(input&&Object.keys(input).length)throw new Error('No parameters accepted.');return {status:state.status,mode:state.mode,score:Math.floor(state.score),speedKmh:Math.round(state.speed*3.6),remainingSeconds:state.mode==='session'?Math.max(0,90-state.time):null};}});register({name:'start_surf_session',description:'Start a new surfing session. Replaces the current run.',inputSchema:{type:'object',properties:{mode:{type:'string',enum:['session','free']}},required:['mode'],additionalProperties:false},annotations:{readOnlyHint:false},execute(input){if(!input||!['session','free'].includes(input.mode)||Object.keys(input).some(k=>k!=='mode'))throw new Error('mode must be session or free');state.mode=input.mode;startGame();return {status:state.status,mode:state.mode};}});window.addEventListener('pagehide',()=>lifeCycle.abort(),{once:true});}}catch{}
 renderer.domElement.addEventListener('webglcontextlost',e=>{e.preventDefault();pause();$('error-text').textContent='Trình duyệt vừa ngắt đồ họa. Tải lại để trở về biển; kỷ lục của bạn vẫn được giữ.';$('error').hidden=false;});
 step(FIXED_DT);capturePrevious();camera.position.set(state.x+8,5.8,state.z+10.2);lookNow.set(state.x-3,1.6,state.z-5);updateVisual(1);renderer.compile(scene,camera);renderer.render(scene,camera);$('loading').style.opacity='0';setTimeout(()=>$('loading').hidden=true,500);requestAnimationFrame(frame);

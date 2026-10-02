@@ -17,41 +17,76 @@ export async function createSurfer(scene){
  for(const name of ['Hips','Spine','Spine1','Spine2','Head','LeftUpLeg','LeftLeg','LeftFoot','RightUpLeg','RightLeg','RightFoot','LeftArm','LeftForeArm','LeftHand','RightArm','RightForeArm','RightHand'])if(!bones[name])throw new Error('Missing surfer rig bone: '+name);
  const p0=new THREE.Vector3(),p1=new THREE.Vector3(),p2=new THREE.Vector3(),dir=new THREE.Vector3(),desired=new THREE.Vector3(),bend=new THREE.Vector3(),joint=new THREE.Vector3(),tmp=new THREE.Vector3(),q0=new THREE.Quaternion(),q1=new THREE.Quaternion(),delta=new THREE.Quaternion();
  const footL=new THREE.Vector3(),footR=new THREE.Vector3(),poleL=new THREE.Vector3(),poleR=new THREE.Vector3(),handL=new THREE.Vector3(),handR=new THREE.Vector3(),elbowL=new THREE.Vector3(),elbowR=new THREE.Vector3(),toe=new THREE.Vector3(),hipTarget=new THREE.Vector3();
- const motion={charge:0,tuck:0,landing:0,phase:'trim',grab:0};
+ const motion={charge:0,tuck:0,landing:0,phase:'trim',grab:0,lean:0,steer:0,slope:0,accel:0,time:0};
+ const reach=new THREE.Vector3(),palmTarget=new THREE.Vector3();
+ const fingerRows=[];
+ for(const side of ['Left','Right']){
+  const axis=bones[side+'HandIndex1'].position.clone().sub(bones[side+'HandPinky1'].position).normalize();
+  for(const finger of ['Index','Middle','Ring','Pinky'])for(let j=1;j<=3;j++){const bone=bones[side+'Hand'+finger+j];if(bone)fingerRows.push({bone,axis,side:side==='Right',factor:j===1?.65:1});}
+ }
+
  function target(out,x,y,z){return out.set(x,y,z).applyMatrix4(rig.matrixWorld);}
  // Each bone keeps its anatomical bind offset. IK aligns its actual child direction,
  // preserving skin weights and continuous elbows/knees instead of moving rigid parts.
  function aim(bone,child,targetWorld){bone.getWorldPosition(p0);child.getWorldPosition(p1);dir.subVectors(p1,p0).normalize();desired.subVectors(targetWorld,p0).normalize();delta.setFromUnitVectors(dir,desired);bone.getWorldQuaternion(q0);q0.premultiply(delta);bone.parent.getWorldQuaternion(q1).invert();bone.quaternion.copy(q1.multiply(q0));bone.updateMatrixWorld(true);}
- function solve(upper,middle,end,goal,pole){upper.getWorldPosition(p0);middle.getWorldPosition(p1);end.getWorldPosition(p2);const a=p0.distanceTo(p1),b=p1.distanceTo(p2);dir.subVectors(goal,p0);const distance=clamp(dir.length(),Math.abs(a-b)+.0001,a+b-.0001);dir.normalize();const along=(a*a-b*b+distance*distance)/(2*distance),height=Math.sqrt(Math.max(0,a*a-along*along));bend.subVectors(pole,p0);bend.addScaledVector(dir,-bend.dot(dir));if(bend.lengthSq()<.00001)bend.set(1,0,0);bend.normalize();joint.copy(p0).addScaledVector(dir,along).addScaledVector(bend,height);aim(upper,middle,joint);aim(middle,end,goal);}
+ function solve(upper,middle,end,goal,pole,arm=false){
+  upper.getWorldPosition(p0);middle.getWorldPosition(p1);end.getWorldPosition(p2);
+  const a=p0.distanceTo(p1),b=p1.distanceTo(p2);dir.subVectors(goal,p0);
+  // Arms retain 25–35 degrees of flexion at maximum reach; legs keep exact deck contacts.
+  const distance=clamp(dir.length(),Math.abs(a-b)+.006,(a+b)*(arm?.957:.9999));dir.normalize();
+  reach.copy(p0).addScaledVector(dir,distance);
+  const along=(a*a-b*b+distance*distance)/(2*distance),height=Math.sqrt(Math.max(0,a*a-along*along));
+  bend.subVectors(pole,p0);bend.addScaledVector(dir,-bend.dot(dir));if(bend.lengthSq()<.00001)bend.set(1,0,0);bend.normalize();
+  joint.copy(p0).addScaledVector(dir,along).addScaledVector(bend,height);
+  aim(upper,middle,joint);aim(middle,end,reach);
+ }
  const leashArray=new Float32Array(7*3),leashGeometry=new THREE.BufferGeometry();leashGeometry.setAttribute('position',new THREE.BufferAttribute(leashArray,3));const leash=new THREE.Line(leashGeometry,new THREE.LineBasicMaterial({color:0x193c42,transparent:true,opacity:.78}));rig.add(leash);
  function pose(s,dt){
-  const phase=s.airProgress||0,tuckTarget=s.air?smooth(.075,.28,phase)*(1-smooth(.65,.9,phase)):0;
-  const landElapsed=.65-(s.landingTime||0),landing=s.landingTime>0?(1-Math.exp(-landElapsed*35))*Math.exp(-landElapsed*5)*(s.landingImpact||.5):0;
-  const k=1-Math.exp(-dt*13);motion.charge=mix(motion.charge,s.charge||0,k);motion.tuck=mix(motion.tuck,tuckTarget,k);motion.landing=mix(motion.landing,landing,k);motion.grab=smooth(.15,.4,phase)*(1-smooth(.6,.83,phase))*(s.air?1:0);
-  motion.phase=s.wipe>0?'recovery':s.air?(phase<.14?'extension':phase<.65?'tuck-grab':'spot-landing'):s.landingTime>.1?'absorb':motion.charge>.1?'compress':Math.abs(s.lean)>.25?'bottom-turn':'trim';
-  for(const r of rest){r.bone.quaternion.copy(r.q);r.bone.position.copy(r.p);}
-  const lean=s.lean||0,tuck=motion.tuck,charge=motion.charge,compress=charge*.21+tuck*.42+Math.abs(lean)*.095+motion.landing*.23;
-  const hipY=.91-compress,hipX=lean*.105+tuck*.055,hipZ=.025-charge*.05-tuck*.055;
-  target(hipTarget,hipX,hipY,hipZ);bones.Hips.parent.worldToLocal(hipTarget);bones.Hips.position.copy(hipTarget);bones.Hips.rotation.y=lean*.08;
-  bones.Spine.rotation.set(.12+charge*.13+tuck*.26, .10+lean*.1, -.04-lean*.08);
-  bones.Spine1.rotation.set(.055+tuck*.12,.12,-.035-charge*.03);
-  bones.Spine2.rotation.set(.03+tuck*.09,.12+lean*.08,lean*.06);
-  bones.Neck.rotation.y=.15; bones.Head.rotation.set(-.11-tuck*.18,.42+lean*.07,0);
+  dt=clamp(dt||1/60,0,.1);motion.time=Number.isFinite(s.oceanTime)?s.oceanTime:motion.time+dt;
+  const phase=clamp(s.airProgress||0,0,1),tuckTarget=s.air?smooth(.10,.34,phase)*(1-smooth(.62,.91,phase)):0;
+  const landElapsed=Math.max(0,.65-(s.landingTime||0));
+  const landing=s.landingTime>0?(1-Math.exp(-landElapsed*32))*Math.exp(-landElapsed*4.7)*clamp(s.landingImpact||.5,.3,1.3):0;
+  const k=1-Math.exp(-dt*12),balanceK=1-Math.exp(-dt*8);
+  motion.charge=mix(motion.charge,s.charge||0,k);motion.tuck=mix(motion.tuck,tuckTarget,k);
+  motion.landing=mix(motion.landing,landing,1-Math.exp(-dt*19));
+  motion.grab=mix(motion.grab,s.air?smooth(.22,.43,phase)*(1-smooth(.62,.84,phase)):0,k);
+  motion.lean=mix(motion.lean,clamp(s.lean||0,-1,1),balanceK);motion.steer=mix(motion.steer,clamp(s.steer||0,-1,1),balanceK);
+  motion.slope=mix(motion.slope,clamp(s.nz||0,-.4,.4),balanceK);motion.accel=mix(motion.accel,clamp(s.acceleration||0,-5,5),balanceK);
+  const lean=motion.lean,tuck=motion.tuck,charge=motion.charge,grab=motion.grab,t=motion.time;
+  const grounded=s.air?0:1,breathe=Math.sin(t*1.65)*.006+Math.sin(t*3.1+.7)*.002;
+  const rebound=grounded*(breathe-motion.slope*.024),weightShift=Math.sin(t*1.2+.6)*.009*grounded;
+  const compress=charge*.205+tuck*.42+Math.abs(lean)*.105+motion.landing*.31;
+  const hipY=.855-compress+rebound,hipX=lean*.095-charge*.035-tuck*.025,hipZ=.035-charge*.065+tuck*.045+weightShift-motion.accel*.003;
+  motion.phase=s.wipe>0?'recovery':s.air?(phase<.18?'extension':phase<.67?'tuck-grab':'spot-landing'):s.landingTime>.1?'absorb':charge>.1?'compress':Math.abs(lean)>.25?'bottom-turn':'trim';
+  for(let i=0;i<rest.length;i++){const r=rest[i];r.bone.quaternion.copy(r.q);r.bone.position.copy(r.p);}
+  target(hipTarget,hipX,hipY,hipZ);bones.Hips.parent.worldToLocal(hipTarget);bones.Hips.position.copy(hipTarget);
+  bones.Hips.rotation.set(0,.035-lean*.15-motion.steer*.035,-lean*.045);
+  // Shoulders lead the turn while the pelvis stays above the feet; bend is spread through spine.
+  bones.Spine.rotation.set(.12+charge*.13+tuck*.43,.13+lean*.15,.025-lean*.06);
+  bones.Spine1.rotation.set(.06+tuck*.23,.105+lean*.12,-.045-charge*.025);
+  bones.Spine2.rotation.set(.02+tuck*.11,.07+lean*.10,-lean*.035);
+  bones.Neck.rotation.set(-.025,.15,0);bones.Head.rotation.set(-.07-tuck*.36,.34+lean*.13,lean*.025);
   rig.updateMatrixWorld(true);
-  target(footL,-.06,.153,-.42+tuck*.095);target(footR,-.015,.153,.43-tuck*.045);
-  target(poleL,.73,.53,-.59);target(poleR,.64,.45,.29);
+  // Fixed deck contact points for every phase, including the aerial: the feet never shuffle on the board.
+  target(footL,-.060,.153,-.42);target(footR,-.015,.153,.43);
+  target(poleL,.55+lean*.08,.46,-.45-charge*.035);
+  target(poleR,.48+lean*.08,.40,.26-tuck*.09);
   solve(bones.LeftUpLeg,bones.LeftLeg,bones.LeftFoot,footL,poleL);solve(bones.RightUpLeg,bones.RightLeg,bones.RightFoot,footR,poleR);
-  if(bones.LeftToeBase){target(toe,.093,.105,-.445+tuck*.095);aim(bones.LeftFoot,bones.LeftToeBase,toe);}
-  if(bones.RightToeBase){target(toe,.139,.105,.445-tuck*.045);aim(bones.RightFoot,bones.RightToeBase,toe);}
-  const grab=motion.grab;
-  target(handL,mix(.29+lean*.16,.13,grab),mix(1.04-compress*.62,hipY+.86,grab),mix(-.72,-.53,grab));
-  target(handR,mix(.37-lean*.16,.25,grab),mix(.96-compress*.66,.19,grab),mix(.57,.10,grab));
-  target(elbowL,.64,hipY+.25,-.48);target(elbowR,.69,hipY+.20,.40);
-  solve(bones.LeftArm,bones.LeftForeArm,bones.LeftHand,handL,elbowL);solve(bones.RightArm,bones.RightForeArm,bones.RightHand,handR,elbowR);
-  bones.LeftHand.rotation.z=-.08; bones.RightHand.rotation.z=-.12-grab*.20;
-  for(const side of ['Left','Right'])for(const finger of ['Index','Middle','Ring','Pinky'])for(let j=1;j<=3;j++){const b=bones[side+'Hand'+finger+j];if(b)b.rotation.x=.13+(side==='Right'?grab*.55:0);}
+  if(bones.LeftToeBase){target(toe,.093,.105,-.445);aim(bones.LeftFoot,bones.LeftToeBase,toe);}
+  if(bones.RightToeBase){target(toe,.139,.105,.445);aim(bones.RightFoot,bones.RightToeBase,toe);}
+  const armSway=grounded*Math.sin(t*1.45+.4)*.018,armLag=motion.steer*.025;
+  // Front hand guides the line. Rear arm is lower and bent rather than a symmetric T-pose.
+  target(handL,mix(.31+lean*.055,.20,grab),mix(hipY+.24+armSway,hipY+.53,grab),mix(-.48-armLag,-.39,grab));
+  target(handR,mix(.29-lean*.075,.277,grab),mix(hipY+.11-armSway,.19,grab),mix(.40+armLag,.10,grab));
+  target(elbowL,.47+lean*.045,hipY+.12,-.32);target(elbowR,.43-lean*.04,hipY+.02,.29);
+  solve(bones.LeftArm,bones.LeftForeArm,bones.LeftHand,handL,elbowL,true);
+  solve(bones.RightArm,bones.RightForeArm,bones.RightHand,handR,elbowR,true);
+  // Wrists remain continuous with the forearm; only the rail hand pronates slightly.
+  bones.LeftHand.rotation.set(.025,0,.055);bones.RightHand.rotation.set(.025,0,-.045-grab*.12);
+  for(let i=0;i<fingerRows.length;i++){const f=fingerRows[i];f.bone.quaternion.setFromAxisAngle(f.axis,(f.side?-1:1)*(.16+(f.side?grab*.54:0))*f.factor);}
+  if(bones.RightHandThumb1)bones.RightHandThumb1.rotation.y=-.10-grab*.27;
   rig.updateMatrixWorld(true);
-  for(let i=0;i<7;i++){const t=i/6;leashArray[i*3]=mix(-.08,.02,t)+Math.sin(t*Math.PI)*.21;leashArray[i*3+1]=mix(.16,.075,t)-Math.sin(t*Math.PI)*.07;leashArray[i*3+2]=mix(.44,1.01,t);}leashGeometry.attributes.position.needsUpdate=true;
+  for(let i=0;i<7;i++){const u=i/6;leashArray[i*3]=mix(-.08,.02,u)+Math.sin(u*Math.PI)*.21;leashArray[i*3+1]=mix(.16,.075,u)-Math.sin(u*Math.PI)*.07;leashArray[i*3+2]=mix(.44,1.01,u);}leashGeometry.attributes.position.needsUpdate=true;
  }
  function inspect(){rig.updateMatrixWorld(true);const left=bones.LeftFoot.getWorldPosition(new THREE.Vector3()),right=bones.RightFoot.getWorldPosition(new THREE.Vector3());rig.worldToLocal(left);rig.worldToLocal(right);return {type:'MakeHuman anatomical skinned mesh',bones:rest.length,skinMeshes,triangles,phase:motion.phase,tuck:motion.tuck,grab:motion.grab,feet:[left.toArray(),right.toArray()]};}
  pose({lean:0,charge:0,air:false,landingTime:0},1);return {rig,pose,inspect};
