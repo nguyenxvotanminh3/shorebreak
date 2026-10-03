@@ -1,0 +1,1693 @@
+{
+  "schemaVersion": 1,
+  "name": "Vuc Lang / Rig 07",
+  "originalAsset": true,
+  "units": "metres",
+  "upAxis": "+Y",
+  "entryFacing": "+Z",
+  "root": [
+    0,
+    0,
+    0
+  ],
+  "approxEnvelope": {
+    "min": [
+      -70,
+      0,
+      -50
+    ],
+    "max": [
+      70,
+      70,
+      50
+    ]
+  },
+  "mainFloorY": 18,
+  "files": {
+    "full": "rig-full.glb",
+    "medium": "rig-medium.glb",
+    "far": "rig-far.glb",
+    "source": "Vuc-Lang-Rig-07.blend"
+  },
+  "doorNodes": {
+    "rig_outer_door_L": {
+      "position": [
+        -0.8,
+        19.75,
+        42
+      ],
+      "closedBounds": {
+        "min": [
+          -1.6,
+          18,
+          41.78
+        ],
+        "max": [
+          0.0,
+          21.5,
+          42.3
+        ]
+      },
+      "openVector": [
+        -1.85,
+        0,
+        0
+      ],
+      "meshBounds": {
+        "min": [
+          -1.5950000000000002,
+          18.01,
+          41.88
+        ],
+        "max": [
+          -0.0050000000000000044,
+          21.49,
+          42.28
+        ]
+      }
+    },
+    "rig_outer_door_R": {
+      "position": [
+        0.8,
+        19.75,
+        42
+      ],
+      "closedBounds": {
+        "min": [
+          0.0,
+          18,
+          41.78
+        ],
+        "max": [
+          1.6,
+          21.5,
+          42.3
+        ]
+      },
+      "openVector": [
+        1.85,
+        0,
+        0
+      ],
+      "meshBounds": {
+        "min": [
+          0.0050000000000000044,
+          18.01,
+          41.88
+        ],
+        "max": [
+          1.5950000000000002,
+          21.49,
+          42.28
+        ]
+      }
+    },
+    "rig_inner_door_L": {
+      "position": [
+        -0.8,
+        19.75,
+        35
+      ],
+      "closedBounds": {
+        "min": [
+          -1.6,
+          18,
+          34.78
+        ],
+        "max": [
+          0.0,
+          21.5,
+          35.3
+        ]
+      },
+      "openVector": [
+        -1.85,
+        0,
+        0
+      ],
+      "meshBounds": {
+        "min": [
+          -1.5950000000000002,
+          18.01,
+          34.88
+        ],
+        "max": [
+          -0.0050000000000000044,
+          21.49,
+          35.28
+        ]
+      }
+    },
+    "rig_inner_door_R": {
+      "position": [
+        0.8,
+        19.75,
+        35
+      ],
+      "closedBounds": {
+        "min": [
+          0.0,
+          18,
+          34.78
+        ],
+        "max": [
+          1.6,
+          21.5,
+          35.3
+        ]
+      },
+      "openVector": [
+        1.85,
+        0,
+        0
+      ],
+      "meshBounds": {
+        "min": [
+          0.0050000000000000044,
+          18.01,
+          34.88
+        ],
+        "max": [
+          1.5950000000000002,
+          21.49,
+          35.28
+        ]
+      }
+    }
+  },
+  "interactionAnchors": {
+    "rig_panel_outside": {
+      "position": [
+        -2.4,
+        19.6,
+        43.2
+      ],
+      "kind": "interaction",
+      "action": "call-sea",
+      "facing": [
+        0,
+        0,
+        1
+      ],
+      "radius": 2.9
+    },
+    "rig_panel_lock_inner": {
+      "position": [
+        -2.6,
+        19.6,
+        38.5
+      ],
+      "kind": "interaction",
+      "action": "request-habitat",
+      "facing": [
+        1,
+        0,
+        0
+      ],
+      "radius": 2.9
+    },
+    "rig_panel_lock_outer": {
+      "position": [
+        2.6,
+        19.6,
+        38.5
+      ],
+      "kind": "interaction",
+      "action": "request-sea",
+      "facing": [
+        -1,
+        0,
+        0
+      ],
+      "radius": 2.9
+    },
+    "rig_panel_vestibule": {
+      "position": [
+        -2.4,
+        19.6,
+        33.2
+      ],
+      "kind": "interaction",
+      "action": "call-habitat",
+      "facing": [
+        0,
+        0,
+        -1
+      ],
+      "radius": 2.9
+    }
+  },
+  "anchors": {
+    "rig_entry_spawn": {
+      "position": [
+        0,
+        19.7,
+        48
+      ],
+      "kind": "anchor"
+    },
+    "rig_dry_spawn": {
+      "position": [
+        0,
+        19.7,
+        31
+      ],
+      "kind": "anchor"
+    },
+    "rig_control_focus": {
+      "position": [
+        0,
+        20.2,
+        1
+      ],
+      "kind": "anchor"
+    }
+  },
+  "water": {
+    "node": "rig_water_volume",
+    "min": [
+      -3,
+      18.05,
+      35
+    ],
+    "max": [
+      3,
+      22.8,
+      42
+    ],
+    "drainedY": 18.05,
+    "floodedY": 22.8,
+    "runtimeOwned": true
+  },
+  "collisionBoxes": [
+    {
+      "name": "Leg_0_0_0",
+      "center": [
+        -52,
+        1.1,
+        -34
+      ],
+      "size": [
+        15,
+        2.2,
+        15
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "Leg_0_0_shaft",
+      "center": [
+        -52,
+        24,
+        -34
+      ],
+      "size": [
+        4.1,
+        44,
+        4.1
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "Leg_0_1_2",
+      "center": [
+        52,
+        1.1,
+        -34
+      ],
+      "size": [
+        15,
+        2.2,
+        15
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "Leg_0_1_shaft",
+      "center": [
+        52,
+        24,
+        -34
+      ],
+      "size": [
+        4.1,
+        44,
+        4.1
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "Leg_1_0_4",
+      "center": [
+        -52,
+        1.1,
+        0
+      ],
+      "size": [
+        15,
+        2.2,
+        15
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "Leg_1_0_shaft",
+      "center": [
+        -52,
+        24,
+        0
+      ],
+      "size": [
+        4.1,
+        44,
+        4.1
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "Leg_1_1_6",
+      "center": [
+        52,
+        1.1,
+        0
+      ],
+      "size": [
+        15,
+        2.2,
+        15
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "Leg_1_1_shaft",
+      "center": [
+        52,
+        24,
+        0
+      ],
+      "size": [
+        4.1,
+        44,
+        4.1
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "Leg_2_0_8",
+      "center": [
+        -52,
+        1.1,
+        34
+      ],
+      "size": [
+        15,
+        2.2,
+        15
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "Leg_2_0_shaft",
+      "center": [
+        -52,
+        24,
+        34
+      ],
+      "size": [
+        4.1,
+        44,
+        4.1
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "Leg_2_1_10",
+      "center": [
+        52,
+        1.1,
+        34
+      ],
+      "size": [
+        15,
+        2.2,
+        15
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "Leg_2_1_shaft",
+      "center": [
+        52,
+        24,
+        34
+      ],
+      "size": [
+        4.1,
+        44,
+        4.1
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "Deck_18_12",
+      "center": [
+        -52,
+        17.8,
+        0.0
+      ],
+      "size": [
+        5,
+        0.35,
+        68
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "Deck_18_13",
+      "center": [
+        52,
+        17.8,
+        0.0
+      ],
+      "size": [
+        5,
+        0.35,
+        68
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "Deck_18_14",
+      "center": [
+        0.0,
+        17.8,
+        -34
+      ],
+      "size": [
+        104,
+        0.35,
+        4
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "Deck_18_15",
+      "center": [
+        0.0,
+        17.8,
+        34
+      ],
+      "size": [
+        104,
+        0.35,
+        4
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "Deck_32_16",
+      "center": [
+        -52,
+        31.8,
+        0.0
+      ],
+      "size": [
+        5,
+        0.35,
+        68
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "Deck_32_17",
+      "center": [
+        52,
+        31.8,
+        0.0
+      ],
+      "size": [
+        5,
+        0.35,
+        68
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "Deck_32_18",
+      "center": [
+        0.0,
+        31.8,
+        -34
+      ],
+      "size": [
+        104,
+        0.35,
+        4
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "Deck_32_19",
+      "center": [
+        0.0,
+        31.8,
+        34
+      ],
+      "size": [
+        104,
+        0.35,
+        4
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "Deck_46_20",
+      "center": [
+        -52,
+        45.8,
+        0.0
+      ],
+      "size": [
+        5,
+        0.35,
+        68
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "Deck_46_21",
+      "center": [
+        52,
+        45.8,
+        0.0
+      ],
+      "size": [
+        5,
+        0.35,
+        68
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "Deck_46_22",
+      "center": [
+        0.0,
+        45.8,
+        -34
+      ],
+      "size": [
+        104,
+        0.35,
+        4
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "Deck_46_23",
+      "center": [
+        0.0,
+        45.8,
+        34
+      ],
+      "size": [
+        104,
+        0.35,
+        4
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "Walkways_24",
+      "center": [
+        0,
+        17.65,
+        33
+      ],
+      "size": [
+        100,
+        0.6,
+        7
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "Walkways_25",
+      "center": [
+        20,
+        17.65,
+        -1
+      ],
+      "size": [
+        20,
+        0.6,
+        28
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "BOPStack_26",
+      "center": [
+        -25,
+        2.5,
+        -10
+      ],
+      "size": [
+        13,
+        2,
+        13
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "Manifold_0_27",
+      "center": [
+        36,
+        19,
+        -20
+      ],
+      "size": [
+        12,
+        1.5,
+        9
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "Manifold_1_28",
+      "center": [
+        37,
+        19,
+        13
+      ],
+      "size": [
+        12,
+        1.5,
+        9
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "Manifold_2_29",
+      "center": [
+        -38,
+        19,
+        18
+      ],
+      "size": [
+        12,
+        1.5,
+        9
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "EntryCage_30",
+      "center": [
+        0,
+        17.65,
+        46
+      ],
+      "size": [
+        7,
+        0.6,
+        8
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "WetLock_31",
+      "center": [
+        0,
+        17.82,
+        38.5
+      ],
+      "size": [
+        6,
+        0.36,
+        7
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "WetLock_side",
+      "center": [
+        -3.0,
+        20.3,
+        38.5
+      ],
+      "size": [
+        0.48,
+        4.6000000000000005,
+        7
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "WetLock_side",
+      "center": [
+        3.0,
+        20.3,
+        38.5
+      ],
+      "size": [
+        0.48,
+        4.6000000000000005,
+        7
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "WetLock_ceiling",
+      "center": [
+        0,
+        22.8,
+        38.5
+      ],
+      "size": [
+        6,
+        0.5,
+        7
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "Vestibule_35",
+      "center": [
+        0,
+        17.82,
+        31.0
+      ],
+      "size": [
+        6,
+        0.36,
+        8
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "Vestibule_side",
+      "center": [
+        -3.0,
+        20.3,
+        31.0
+      ],
+      "size": [
+        0.48,
+        4.6000000000000005,
+        8
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "Vestibule_side",
+      "center": [
+        3.0,
+        20.3,
+        31.0
+      ],
+      "size": [
+        0.48,
+        4.6000000000000005,
+        8
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "Vestibule_ceiling",
+      "center": [
+        0,
+        22.8,
+        31.0
+      ],
+      "size": [
+        6,
+        0.5,
+        8
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "AccessCorridor_39",
+      "center": [
+        0,
+        17.82,
+        20.5
+      ],
+      "size": [
+        6,
+        0.36,
+        13
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "AccessCorridor_side",
+      "center": [
+        -3.0,
+        20.3,
+        20.5
+      ],
+      "size": [
+        0.48,
+        4.6000000000000005,
+        13
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "AccessCorridor_side",
+      "center": [
+        3.0,
+        20.3,
+        20.5
+      ],
+      "size": [
+        0.48,
+        4.6000000000000005,
+        13
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "AccessCorridor_ceiling",
+      "center": [
+        0,
+        22.8,
+        20.5
+      ],
+      "size": [
+        6,
+        0.5,
+        13
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "ControlRoomUpper_side",
+      "center": [
+        -10.0,
+        25.84,
+        3.5
+      ],
+      "size": [
+        0.48,
+        3.68,
+        21
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "ControlRoomUpper_side",
+      "center": [
+        10.0,
+        25.84,
+        3.5
+      ],
+      "size": [
+        0.48,
+        3.68,
+        21
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "ControlRoomUpper_ceiling",
+      "center": [
+        0,
+        27.8,
+        3.5
+      ],
+      "size": [
+        20,
+        0.5,
+        21
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "ControlRoom_46",
+      "center": [
+        -9.85,
+        21,
+        -0.5
+      ],
+      "size": [
+        0.3,
+        6,
+        21
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "ControlRoom_47",
+      "center": [
+        9.85,
+        21,
+        -3.5
+      ],
+      "size": [
+        0.3,
+        6,
+        7
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "ControlRoom_48",
+      "center": [
+        9.85,
+        21,
+        10
+      ],
+      "size": [
+        0.3,
+        6,
+        8
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "ControlRoom_49",
+      "center": [
+        0,
+        17.8,
+        3.5
+      ],
+      "size": [
+        20,
+        0.4,
+        21
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "ControlRoom_50",
+      "center": [
+        0,
+        23,
+        -7
+      ],
+      "size": [
+        20,
+        10,
+        0.4
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "ControlRoom_51",
+      "center": [
+        -6.5,
+        23,
+        14
+      ],
+      "size": [
+        7,
+        10,
+        0.4
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "ControlRoom_52",
+      "center": [
+        6.5,
+        23,
+        14
+      ],
+      "size": [
+        7,
+        10,
+        0.4
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "ControlRoom_53",
+      "center": [
+        0,
+        25.7,
+        14
+      ],
+      "size": [
+        6,
+        4.6,
+        0.4
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "MachineryGallery_54",
+      "center": [
+        18.5,
+        17.8,
+        3.5
+      ],
+      "size": [
+        17,
+        0.4,
+        21
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "MachineryGallery_55",
+      "center": [
+        26.85,
+        22.5,
+        3.5
+      ],
+      "size": [
+        0.3,
+        9,
+        21
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "MachineryGallery_56",
+      "center": [
+        18.5,
+        26.9,
+        3.5
+      ],
+      "size": [
+        17,
+        0.4,
+        21
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "MachineryGallery_57",
+      "center": [
+        18.5,
+        22.5,
+        -7
+      ],
+      "size": [
+        17,
+        9,
+        0.3
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "MachineryGallery_58",
+      "center": [
+        18.5,
+        22.5,
+        14
+      ],
+      "size": [
+        17,
+        9,
+        0.3
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "PressureBulkheads_59",
+      "center": [
+        -2.3,
+        20.5,
+        42
+      ],
+      "size": [
+        1.4,
+        5,
+        0.5
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "PressureBulkheads_60",
+      "center": [
+        2.3,
+        20.5,
+        42
+      ],
+      "size": [
+        1.4,
+        5,
+        0.5
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "PressureBulkheads_61",
+      "center": [
+        0,
+        22.25,
+        42
+      ],
+      "size": [
+        3.2,
+        1.5,
+        0.5
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "PressureBulkheads_62",
+      "center": [
+        -2.3,
+        20.5,
+        35
+      ],
+      "size": [
+        1.4,
+        5,
+        0.5
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "PressureBulkheads_63",
+      "center": [
+        2.3,
+        20.5,
+        35
+      ],
+      "size": [
+        1.4,
+        5,
+        0.5
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "PressureBulkheads_64",
+      "center": [
+        0,
+        22.25,
+        35
+      ],
+      "size": [
+        3.2,
+        1.5,
+        0.5
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "ControlConsoles_65",
+      "center": [
+        -7,
+        18.72,
+        -4.7
+      ],
+      "size": [
+        3.1,
+        1.35,
+        1.0
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "ControlConsoles_66",
+      "center": [
+        -3.5,
+        18.72,
+        -4.7
+      ],
+      "size": [
+        3.1,
+        1.35,
+        1.0
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "ControlConsoles_67",
+      "center": [
+        0,
+        18.72,
+        -4.7
+      ],
+      "size": [
+        3.1,
+        1.35,
+        1.0
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "ControlConsoles_68",
+      "center": [
+        3.5,
+        18.72,
+        -4.7
+      ],
+      "size": [
+        3.1,
+        1.35,
+        1.0
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "ControlConsoles_69",
+      "center": [
+        7,
+        18.72,
+        -4.7
+      ],
+      "size": [
+        3.1,
+        1.35,
+        1.0
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "InteriorEquipment_70",
+      "center": [
+        0,
+        18.75,
+        5
+      ],
+      "size": [
+        4,
+        1.5,
+        2.5
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "InteriorEquipment_71",
+      "center": [
+        -8.8,
+        19.5,
+        2
+      ],
+      "size": [
+        1,
+        3,
+        1.7
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "InteriorEquipment_72",
+      "center": [
+        -8.8,
+        19.5,
+        6
+      ],
+      "size": [
+        1,
+        3,
+        1.7
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "InteriorEquipment_73",
+      "center": [
+        -8.8,
+        19.5,
+        10
+      ],
+      "size": [
+        1,
+        3,
+        1.7
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "InteriorEquipment_74",
+      "center": [
+        8.8,
+        19.5,
+        2
+      ],
+      "size": [
+        1,
+        3,
+        1.7
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "InteriorEquipment_75",
+      "center": [
+        8.8,
+        19.5,
+        6
+      ],
+      "size": [
+        1,
+        3,
+        1.7
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "InteriorEquipment_76",
+      "center": [
+        8.8,
+        19.5,
+        10
+      ],
+      "size": [
+        1,
+        3,
+        1.7
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "MachineryInterior_77",
+      "center": [
+        22.5,
+        18.35,
+        -3
+      ],
+      "size": [
+        6,
+        0.7,
+        4.4
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "MachineryInterior_78",
+      "center": [
+        22.5,
+        18.35,
+        3
+      ],
+      "size": [
+        6,
+        0.7,
+        4.4
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "MachineryInterior_79",
+      "center": [
+        22.5,
+        18.35,
+        9
+      ],
+      "size": [
+        6,
+        0.7,
+        4.4
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "MachineryInterior_80",
+      "center": [
+        12.2,
+        19.8,
+        -3
+      ],
+      "size": [
+        1.4,
+        3.6,
+        2.8
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "MachineryInterior_81",
+      "center": [
+        12.2,
+        19.8,
+        3
+      ],
+      "size": [
+        1.4,
+        3.6,
+        2.8
+      ],
+      "type": "aabb"
+    },
+    {
+      "name": "MachineryInterior_82",
+      "center": [
+        12.2,
+        19.8,
+        9
+      ],
+      "size": [
+        1.4,
+        3.6,
+        2.8
+      ],
+      "type": "aabb"
+    }
+  ],
+  "floors": [
+    {
+      "name": "entry",
+      "min": [
+        -3.5,
+        17.65,
+        42
+      ],
+      "max": [
+        3.5,
+        18,
+        50
+      ]
+    },
+    {
+      "name": "wet-lock",
+      "min": [
+        -3,
+        17.65,
+        35
+      ],
+      "max": [
+        3,
+        18,
+        42
+      ]
+    },
+    {
+      "name": "vestibule",
+      "min": [
+        -3,
+        17.65,
+        27
+      ],
+      "max": [
+        3,
+        18,
+        35
+      ]
+    },
+    {
+      "name": "corridor",
+      "min": [
+        -3,
+        17.65,
+        14
+      ],
+      "max": [
+        3,
+        18,
+        27
+      ]
+    },
+    {
+      "name": "control",
+      "min": [
+        -10,
+        17.65,
+        -7
+      ],
+      "max": [
+        10,
+        18,
+        14
+      ]
+    },
+    {
+      "name": "machinery",
+      "min": [
+        10,
+        17.65,
+        -7
+      ],
+      "max": [
+        27,
+        18,
+        14
+      ]
+    }
+  ],
+  "rooms": [
+    {
+      "name": "wet-lock",
+      "min": [
+        -3,
+        18,
+        35
+      ],
+      "max": [
+        3,
+        23,
+        42
+      ],
+      "type": "dynamic-water"
+    },
+    {
+      "name": "vestibule",
+      "min": [
+        -3,
+        18,
+        27
+      ],
+      "max": [
+        3,
+        23,
+        35
+      ],
+      "type": "dry"
+    },
+    {
+      "name": "corridor",
+      "min": [
+        -3,
+        18,
+        14
+      ],
+      "max": [
+        3,
+        23,
+        27
+      ],
+      "type": "dry"
+    },
+    {
+      "name": "control",
+      "min": [
+        -10,
+        18,
+        -7
+      ],
+      "max": [
+        10,
+        28,
+        14
+      ],
+      "type": "dry"
+    },
+    {
+      "name": "machinery",
+      "min": [
+        10,
+        18,
+        -7
+      ],
+      "max": [
+        27,
+        27,
+        14
+      ],
+      "type": "dry"
+    }
+  ],
+  "doorOpenings": [
+    {
+      "door": "outer",
+      "center": [
+        0,
+        19.75,
+        42
+      ],
+      "width": 3.2,
+      "height": 3.5,
+      "depth": 0.5
+    },
+    {
+      "door": "inner",
+      "center": [
+        0,
+        19.75,
+        35
+      ],
+      "width": 3.2,
+      "height": 3.5,
+      "depth": 0.5
+    }
+  ],
+  "safePath": [
+    [
+      0,
+      19.65,
+      48
+    ],
+    [
+      0,
+      19.65,
+      39
+    ],
+    [
+      0,
+      19.65,
+      31
+    ],
+    [
+      0,
+      19.65,
+      20
+    ],
+    [
+      0,
+      19.65,
+      11
+    ],
+    [
+      0,
+      19.65,
+      8
+    ],
+    [
+      3.2,
+      19.65,
+      8
+    ],
+    [
+      6,
+      19.65,
+      4
+    ],
+    [
+      10.35,
+      19.65,
+      4
+    ],
+    [
+      10.35,
+      19.65,
+      5.2
+    ],
+    [
+      14.7,
+      19.65,
+      5.2
+    ],
+    [
+      16.5,
+      19.65,
+      3.5
+    ]
+  ],
+  "notes": [
+    "No collider should be inferred from overall exterior bounds.",
+    "Both doors must never be passable simultaneously; close outer before draining, flood before opening outer.",
+    "Water plane and transition effects are runtime-owned.",
+    "LOD swaps keep shared world-root alignment; detail interaction nodes exist at every level.",
+    "Closed door leaf bounds are independent dynamic colliders; openVector is in local game metres.",
+    "Source is authored in Blender Z-up with scene units metres; GLBs and this manifest are +Y-up.",
+    "No copied product geometry or third-party textures."
+  ]
+}

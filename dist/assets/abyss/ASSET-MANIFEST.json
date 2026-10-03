@@ -1,0 +1,249 @@
+{
+  "version": "abyss-reef-art-candidate-2",
+  "date": "2026-10-02",
+  "sharkRevision": "v3 corrected continuous jaw and subterminal mouth",
+  "axis": "Y up, -Z forward",
+  "notes": "Asset byte/triangle counts are not GPU timings. Motion commit229ad9d passed a partial actual Mac articulated-pose gate before this newer art replacement; see MOTION-MAC-QA.md. Refined Kraken, Blender vegetation and jelly tissue atlas are validated separately; their integrated game appearance still requires browser QA.",
+  "models": [
+    {
+      "file": "kraken-lod.glb",
+      "bytes": 1441556,
+      "sha256": "d37f79c3d3e01fb2bef0742be4021eb69c516cde0660ae1a5397e1229978d871",
+      "triangles": 18000,
+      "meshPrimitives": 4,
+      "materials": 4,
+      "bones": 59,
+      "clips": [
+        "Abyssal drift | 6 second seamless idle"
+      ],
+      "images": [
+        {
+          "mimeType": "image/png",
+          "bytes": 78555
+        },
+        {
+          "mimeType": "image/png",
+          "bytes": 78314
+        },
+        {
+          "mimeType": "image/png",
+          "bytes": 40488
+        }
+      ],
+      "revision": "Refined organic surface and skin weights; exact prior bind transforms and animation values preserved"
+    },
+    {
+      "file": "kraken.glb",
+      "bytes": 3768704,
+      "sha256": "3924dcea63e023965d1bf3396b719f243deb36de9b22134c12b523e4eab6043a",
+      "triangles": 53901,
+      "meshPrimitives": 4,
+      "materials": 4,
+      "bones": 59,
+      "clips": [
+        "Abyssal drift | 6 second seamless idle"
+      ],
+      "images": [
+        {
+          "mimeType": "image/png",
+          "bytes": 274143
+        },
+        {
+          "mimeType": "image/png",
+          "bytes": 250438
+        },
+        {
+          "mimeType": "image/png",
+          "bytes": 122207
+        }
+      ],
+      "revision": "Refined organic surface and skin weights; exact prior bind transforms and animation values preserved"
+    },
+    {
+      "file": "shark-lod.glb",
+      "bytes": 1593796,
+      "sha256": "871c3d45632c890ad8209f5349ffdd6bcc83f1252a63ca8a69a37ecd7236a0a8",
+      "triangles": 14401,
+      "meshPrimitives": 3,
+      "materials": 3,
+      "bones": 8,
+      "clips": [
+        "Cruise · 2.4 second seamless swim"
+      ],
+      "images": [
+        {
+          "mimeType": "image/png",
+          "bytes": 451170
+        },
+        {
+          "mimeType": "image/png",
+          "bytes": 206675
+        }
+      ]
+    },
+    {
+      "file": "shark.glb",
+      "bytes": 4076704,
+      "sha256": "dce3581794ebf774e90952b5dbdeb9dbd4a96507441fe016b8b0419acd25ead0",
+      "triangles": 28802,
+      "meshPrimitives": 3,
+      "materials": 3,
+      "bones": 8,
+      "clips": [
+        "Cruise · 2.4 second seamless swim"
+      ],
+      "images": [
+        {
+          "mimeType": "image/png",
+          "bytes": 1651488
+        },
+        {
+          "mimeType": "image/png",
+          "bytes": 766821
+        }
+      ]
+    },
+    {
+      "file": "warden-lod.glb",
+      "bytes": 3246340,
+      "sha256": "36624e6f495914a6d581914c5b05b672540aeb6db611168051d9dcfcc37a79c8",
+      "triangles": 22000,
+      "meshPrimitives": 6,
+      "materials": 6,
+      "bones": 18,
+      "clips": [
+        "Abyssal threat idle · 4 second seamless loop"
+      ],
+      "images": [
+        {
+          "mimeType": "image/png",
+          "bytes": 566446
+        },
+        {
+          "mimeType": "image/png",
+          "bytes": 210538
+        },
+        {
+          "mimeType": "image/png",
+          "bytes": 188588
+        },
+        {
+          "mimeType": "image/png",
+          "bytes": 493545
+        },
+        {
+          "mimeType": "image/png",
+          "bytes": 272061
+        }
+      ]
+    },
+    {
+      "file": "warden.glb",
+      "bytes": 4678800,
+      "sha256": "386f56ed88c765b90539e66b4a32124e4b699c60ca2c353b6c5b6fea7786682d",
+      "triangles": 53064,
+      "meshPrimitives": 6,
+      "materials": 6,
+      "bones": 18,
+      "clips": [
+        "Abyssal threat idle · 4 second seamless loop"
+      ],
+      "images": [
+        {
+          "mimeType": "image/png",
+          "bytes": 566446
+        },
+        {
+          "mimeType": "image/png",
+          "bytes": 210538
+        },
+        {
+          "mimeType": "image/png",
+          "bytes": 188588
+        },
+        {
+          "mimeType": "image/png",
+          "bytes": 493545
+        },
+        {
+          "mimeType": "image/png",
+          "bytes": 272061
+        }
+      ]
+    },
+    {
+      "file": "diver-arms.glb",
+      "bytes": 981224,
+      "sha256": "074e1d623304e5b99737b406b239d7c891b9413cb95148c16c4a821bd46dc179",
+      "triangles": 16794,
+      "meshPrimitives": 1,
+      "materials": 1,
+      "bones": 37,
+      "clips": [
+        "idle",
+        "scan",
+        "sprint",
+        "swim"
+      ],
+      "role": "Camera-local first-person diver arms; CC0 anatomical derivative with custom rig, tailoring and clips",
+      "images": [
+        {
+          "mimeType": "image/png",
+          "bytes": 33650
+        }
+      ]
+    },
+    {
+      "file": "vegetation.glb",
+      "bytes": 1586968,
+      "sha256": "84fac5f7e06cf021ca2993648f5562ec0c9adbc8abd2a9f5808c2e9ab713c3fa",
+      "triangles": 7426,
+      "meshPrimitives": 12,
+      "materials": 1,
+      "bones": 0,
+      "clips": [],
+      "images": [
+        {
+          "mimeType": "image/png",
+          "bytes": 288905
+        },
+        {
+          "mimeType": "image/png",
+          "bytes": 753697
+        },
+        {
+          "mimeType": "image/png",
+          "bytes": 220899
+        }
+      ],
+      "notes": "Twelve full/low meshes for six rooted species; one shared opaque atlas, COLOR_0 alpha becomes independent bend weight; instanced at runtime",
+      "nodes": [
+        "veg_ribbon_kelp_full",
+        "veg_ribbon_kelp_low",
+        "veg_split_kelp_full",
+        "veg_split_kelp_low",
+        "veg_eelgrass_full",
+        "veg_eelgrass_low",
+        "veg_red_algae_full",
+        "veg_red_algae_low",
+        "veg_sea_fan_full",
+        "veg_sea_fan_low",
+        "veg_plate_coral_full",
+        "veg_plate_coral_low"
+      ]
+    }
+  ],
+  "krakenRevision": "Organic tissue and sucker deformation refinement; 59-bone contract preserved",
+  "runtimeTextures": [
+    {
+      "file": "jelly-tissue-atlas-512.png",
+      "bytes": 261387,
+      "sha256": "1e9dbf1e6fe231e0291f2610b534da132aa5d10f4854cf1d1833dcd3074c2673",
+      "width": 512,
+      "height": 512,
+      "kind": "tissue-channel-data",
+      "colorSpace": "NoColorSpace",
+      "notes": "One shared original RGBA tissue atlas; alpha encodes density, not direct output opacity. No extra geometry or draw calls."
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+VUC LANG / FIRST-PERSON DIVER ARMS
+
+Anatomical hands, forearms and source weights are adapted from the repository's
+CC0 athlete asset, derived from MakeHuman / MPFB2 hm08 through NAVER anny data
+and the three.ws CC0 mirror. Original CC0 notices remain in ../CC0-LICENSE.txt,
+../anny-LICENSE.md and ../anny-README.md.
+
+Original CC0 authors credited by the mirror: Data Collection AB, Joel Palmius,
+Jonas Hauquier / MakeHuman.
+Source: https://github.com/nirholas/three.ws/tree/main/avatar-sources/anny
+Upstream: https://github.com/naver/anny
+
+First-person framing, glove/sleeve tailoring, wrist piping, vertex pigment,
+512px roughness texture, the dedicated 37-bone rig and all four animation clips
+were authored in Blender for this game. No external motion-capture animation,
+SMPL-X topology, source skin image or anny Python library ships in the playable
+arms derivative. The original source GLB remains separately licensed for the
+preserved surfing game and for reproducible asset editing.
+
+Game artifact: diver-arms.glb; units metres, X right / Y up / -Z forward.
+Identity camera attachment. One material primitive, 16,794 triangles,
+37 joints, 981,224 bytes. Clips: idle 4s, swim 3s, sprint 1.6s, scan 3s.
+Authored validation and actual Blender reimport/framing renders are distinct
+from the game's real-browser QA. The editable .blend, rebuild scripts, source
+references and model previews are provided in the separate Blender package.

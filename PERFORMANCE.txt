@@ -1,0 +1,138 @@
+SHOREBREAK / VỰC LẶNG — concrete budgets and limitations
+
+Rendering strategy
+Static Three.js r170, WebGL 2, self-hosted assets. No runtime CDN or npm/build.
+One tier-bounded torch shadow map; no bloom, SSAO or full-screen postprocessing.
+One rendered view plus the cached shadow pass described in DIVE-TOOLS.txt.
+World materials use shared analytical caustics. Camera remains first person.
+
+Quality tiers: low / medium / high
+Pixel ratio cap:               0.8 / 1.2 / 1.6
+Particle draw range:            450 / 850 / 1350
+Fish instances per school:     12 / 25 / 42 (5 schools, culled by distance)
+Repeated habitat density:      46% / 75% / 100%
+Habitat detail radius:         90 / 123 / 170m (tile centers)
+Terrain tile radius:           144 / 184 / 229m (tile centers)
+Light shafts:                  off / 5 / 5
+Torch distance:                30 / 38 / 46m
+Torch shadow map:              256 / 512 / 768px
+Torch maximum shadow updates:  12 / 20 / 30Hz (stationary map reused)
+Large creature quality:        LOD / LOD / distance LOD+full
+
+Original seeded/fallback world: 48 terrain tiles, 55,296 terrain triangles in entire fixed world;
+612 rock instances, 707 branching corals, 1,316 kelp, 266 sea fans, 855 sponge
+tubes, 388 cylindrical rock/landmark colliders. Habitat is generated once,
+then its draw counts and visibility are changed in place. Frustum culling
+also applies to world meshes. Small fish use shared geometry and material.
+Max 3 large creatures; only loaded visible creatures update skeleton poses.
+GLBs load in proximity to habitat; full variant loads only near on high tier.
+Loaded variants remain cached, not unloaded during one session. High/LOD
+switches share an absolute animation time to avoid a phase reset. The later
+Blender vegetation replacement uses its separate capped populations below.
+
+Simulation/UI
+90Hz fixed step, capped catch-up; all simulation and animation stop on pause.
+Input has keyboard/pointer ownership and clear-on-blur/cancel. HUD text is
+updated at 10Hz; projected navigation markers move each visual frame.
+Banked progress saves only when serialized banked/deepest data changes.
+Auto quality starts medium/low and drops after 5 seconds of >32ms frame time.
+The performance label is a local rolling render-loop estimate, not a promise.
+
+Not implemented / not verified
+No streaming terrain downloads, GPU occlusion queries, compressed KTX2 textures,
+Draco decode or custom meshopt pipeline. GLBs are embedded-image files and
+fetch only when useful; model counts are recorded in ASSET-MANIFEST.json.
+Actual Mac browser QA now runs WebGL2 on Apple M2 / Chrome 154. Seven-second
+requestAnimationFrame samples near the Warden averaged 55.44 FPS High,
+57.01 Medium and 57.86 Low. End-of-sample draw calls / triangles were
+74 / 153,952; 68 / 95,290; 51 / 55,628 respectively. These are short frame
+cadence samples, not GPU timer queries or a whole-map benchmark. An earlier
+moving reef sample averaged about 48 FPS; there is no steady-60 guarantee.
+No physical-phone/touch, successful pointer-lock acceptance, native held-key
+or audio-output QA was performed. Cloud Chromium remains blocked by local
+IPC restrictions; its Node application tests still use renderer stand-ins.
+See MAC-QA.md for the actual-device method and exact limitations.
+
+First-person arm addition (new local feature)
+One additional skinned draw primitive: 16,794 triangles, 37 joints, one
+embedded 512px roughness texture, 981,224-byte GLB. Four preallocated mixer
+actions; no second render pass, overlay scene, shadow map or new world light.
+Camera-space collision probes run at approximately 10Hz. Actual resolved
+physics displacement feeds stroke strength; blocked movement settles to idle.
+The earlier M2 frame-cadence figures predate these arms. They must not be
+represented as performance measurements of the new arm build.
+
+Arms-build actual Mac follow-up
+Medium rAF over seven seconds: about 57.86 FPS at 64m in the initial arms
+candidate, and 54.00 FPS at the shallow reef after the portrait fix. Final
+reef workload: 194 draw calls, 164,581 triangles, 850 particles. These views
+are different; this is not a before/after benchmark or GPU timing.
+See ARMS-MAC-QA.md for the remaining near-floor contact and torch imbalance.
+
+New underwater optics candidate
+One 8,192-triangle moving surface replaces the older surface. Normal detail
+uses 3 / 4 / 5 analytic octaves plus derivative fading; shared material path
+haze replaces double fog, without textures, render targets or extra passes.
+Actual water pixel review and the air-side correction are recorded in
+WATER-MAC-QA.md. Its limited rAF samples are not integrated-art performance.
+
+Articulated motion candidate
+No new GLBs or textures; species overlays reuse real weighted bones and cached
+track interpolants. Large creature kinematics step at 90 Hz; only visible LOD
+meshes are posed. Small fish share one 137-triangle deforming geometry, up to
+210 instances. Four jellyfish add at most 8 transparent draws and 12,672 triangles
+with low-tier reductions and reusable CPU buffers. The pre-art motion milestone passed178 tests on cloud and Mac, with partial
+actual articulated-pose acceptance in MOTION-MAC-QA.md. New-motion GPU timings
+remain unmeasured.
+
+Blender art integration (separate unmeasured candidate)
+Vegetation uses one shared opaque atlas material, six species/twelve geometry
+variants, global320/220/140 visible-instance caps and96/64/0 full-detail caps
+(high/medium/low), with maximum12/12/6 draws. Only a nearby subset uses full
+geometry; per-frame allocations and transparent leaf sorting are avoided.
+The1.59MB pack adds1024px color and512px normal/ORM maps. Refined Kraken reduces
+full triangles55873→53901 and full payload4.15MB→3.77MB; LOD stays18000 triangles
+and shrinks1.49MB→1.44MB. The shared jelly tissue atlas adds261KB with no new
+geometry/draw/pass. These are code/asset budgets, not measured browser speed.
+Actual integrated-art performance remains unverified; the later Mac browser
+operation stalled. See MAC-V4-NUMERIC-QA.md for the precise limits.
+
+Deep-rig candidate
+Additional32 distance-culled basin tiles,25,600ground triangles. Facility GLBs:
+Far2476tri/12primitives/133960B; Medium47000/44/1254256B; Full136036/47/3839176B.
+Load proximity370/190/110m; Full only onHigh, not forced inside onLower tiers.
+Four near interior lights and one bounded32-instance droplet draw. No new rig
+textures, transmission buffer or full-screen pass. The later shared torch casts
+its bounded shadows on facility geometry. Primitive
+counts/bytes are not measured frame rates. Exact architecture and remaining
+actual-device checks are in RIG-IMPLEMENTATION.md.
+
+Latest steering/tools candidate
+Sonar stores at most16 echoes and examines at most256 contacts per emission;
+three HUD rows update at10Hz. No sonar sphere draw remains. Flashlight registers
+solid meshes at creation/child events, not by scanning the whole scene per
+frame. Arm irradiance limiting reuses the existing material/draw. These concrete
+budgets have not yet received GPU or visual A/B validation. See DIVE-TOOLS.txt.
+
+Defensive ink candidate
+At most two cloud slots /48 instanced quads /96 triangles /one draw, with
+12/18/24 puffs per cloud by tier. Procedural material, no texture or framebuffer.
+Actual siphon and defensive joint queries reuse cached bind transforms. Local
+visibility veil is density-driven, with no HUD/input penalty. These budgets
+are not measured frame rates; new ink rendering is still unverified.
+
+Island ecosystem candidate
+One3.51MB shared512px opaque atlas/prototype pack,15 variants×2LODs. Final
+layout794sites, but visible-instance caps are500/320/180 and full-detail
+caps80/40/0 (High/Medium/Low), at most30 draws including five terrain tiles /37,646 triangles.
+One960-triangle daylight sky draw is added above water. Both island geometry
+and assets use distance culling, LOD hysteresis and persistent buffers. No
+new GPU timing or steady-FPS claim; Blender previews are separate evidence.
+
+DYNAMIC SEA / V8
+The four-minute deterministic weather cycle keeps the existing8,192-triangle
+water and960-triangle sky: no extra draw pass, reflection target, texture or
+particle allocation. Three swell bands and3/4/5 normal octaves remain capped.
+Weather uniforms update in place; bounded whitecaps reuse the surface shader.
+No new player forces; deep effects decay, shore/buoy displacement is damped.
+These are implementation budgets, not measured GPU/frame-rate results.

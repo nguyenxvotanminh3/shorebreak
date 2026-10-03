@@ -46,3 +46,23 @@ Authored motion follows compression, extension, asymmetric knee tuck/rail grab, 
 Physics uses fixed 120Hz steps with render interpolation. Lateral rail grip has momentum; airborne X/Z velocity is preserved independently of wave motion. Surface orientation samples nose/tail/rails. Lip takeoff speed is tuned for readable gameplay (roughly 3–5m height), not claimed as a measured professional-athlete average. Test launch reached 4.58m with ~1.92s airtime, landed cleanly; 360 launch/landing also verified. Identical control schedules at render rates 30, 60 and 144Hz produced matching positions and speed.
 
 Four original animated sea obstacles: shark, kraken, sea serpent and jellyfish. Encounter warnings appear before contact; jump clearance accounts for board height; collisions reduce speed/reset combo and grant brief recovery immunity. Verified shark collision and a successful jump over the shark in deterministic simulation.
+
+VERSION 4.2 — held aura, animation stability and organic creature surfaces
+
+Input and animation fixes
+- E now has immediate held intent (auraHeld), including a grounded salute and visible open-arc FX. Scoring remains gated by the original safe mid-air window (auraActive); grounded posing earns no aura bonus.
+- Key sources and touch pointer IDs are tracked independently. Releasing one alias/pointer cannot cancel another held source. Pause, blur, restart and dialog transitions clear intent; repeat events cannot restore stale held inputs.
+- Zero delta means frozen animation. Pause/finish skip visual easing, camera and wave updates; audio is updated separately so pausing also mutes wind. A hard airborne gravity-blend cutoff was replaced by exponential damping.
+- Three air poses blend through time instead of snapping between styles. IK deck contacts remain fixed; actual GLB bone tests check the foot positions and visible hand displacement.
+
+Graphics implementation
+- Creature skin uses deterministic shared 128x128 albedo, roughness and tangent-space normal maps. Broad pigmentation is baked in bind space; UVs stay attached during deformation. Skin is nonmetallic, with restrained glow and more anatomical kaiju/kraken forms.
+- One directional light casts PCFSoft self/other-object shadows near the rider: 1024 balanced, 2048 high, disabled low. A cooler hemisphere/rim fill preserves volume rather than washing the forms out. The shadow region follows the endless course.
+- A separate reusable wave-conforming contact-shade mesh grounds the rider and nearby obstacles at every tier. It is an artistic contact approximation, not a physically exact reflected or refracted shadow.
+- Reference: Three.js r170 shadow guidance, including the cost of additional casting lights and the alternative of contact planes: https://raw.githubusercontent.com/mrdoob/three.js/r170/manual/en/shadows.html
+- Frame timing reference: https://developer.mozilla.org/en-US/docs/Web/API/Window/requestAnimationFrame
+
+Validation boundary for 4.2
+- node --test tests/*.test.mjs runs dependency-free physics/IK, animation, input, lighting and creature-buffer checks, plus the production application handlers/frame loop with Node DOM and renderer stand-ins.
+- The stand-ins test logic, pause/resume, key events, touch cancellation and quality transitions. They DO NOT validate GPU shaders, real browser keyboard input, screenshots, draw-call timing or actual device FPS.
+- Local HTTP server health returned 200, but the cloud browser could not reach the preview service in this environment. No before/after pixel comparison was completed. Visual and GPU review remains required before release; previous-version browser observations above are not claims about 4.2.

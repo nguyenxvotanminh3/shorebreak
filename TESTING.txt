@@ -1,0 +1,181 @@
+SHOREBREAK — VỰC LẶNG / verification report
+Updated: 2026-10-03, dynamic-sea-v8 with ink and island exploration
+
+FINAL AUTOMATED RESULT
+node --test tests/*.test.mjs
+443 tests passed, 0 failed, 0 skipped: 422 underwater/island/sea checks and 21 preserved
+surfing regression checks. Source checkout: Node.js 24.19.0. Prior Mac base suite: 60/60 on Node26.4.0.
+JavaScript syntax, relative runtime imports/assets and git diff --check pass.
+This source is the complete candidate for the authorized PR #3 and existing Site
+update. Exact remote and deployment verification are reported separately after
+the services confirm them; a passed source suite alone does not establish deployment.
+
+Simulation and world (23)
+- First-person movement, diagonal normalization, sprint oxygen cost and
+  fixed-step agreement across 30/60/120Hz plus jittered frame schedules
+- Surface refill/healing, bounds, cylinder pushout and slope floor re-clamp
+- Facing/proximity/held scan progress, release decay and target changes
+- Damage cooldown, recovery preserving only banked data, upload and completion
+- Sonar cooldown and independent keyboard/touch ownership
+- All three physical objectives reachable/scannable/bankable in actual world
+- Navigable real diving-bell entrance and oxygen refill inside its volume
+- Finite actual Three geometry, shared terrain, bounded instances and tiers
+- 2,400 world +1,800 life updates with stable mesh/material/buffer identities
+- Shared shader injection, LOD loading/hysteresis, absolute animation time
+- Resource cleanup, delayed GLB arrival after dispose and asset failures
+Geometry route tests exclude creature threats; they do not prove difficulty
+balance. Shader source injection is not itself GPU compilation.
+
+Production application integration (24, including later regressions)
+Runs abyss.js with actual world/life/simulation and explicit DOM, WebGLRenderer,
+AudioContext and GLTF-loader stand-ins. This suite does not draw pixels.
+- Start, WASD/vertical/look, granted/denied pointer lock, drag fallback, F/Q/E
+- Input-driven first scan/return/bank, storage/continue, malformed/denied saves
+- Pause/dialogs/Escape/blur/visibility/home/resume, frozen simulation and audio
+- Quality/settings/auto reduction, resize, touch cancellation and ownership
+- Stale key-repeat and flashlight-reset regressions; context-loss handling
+- NEW: completed-save Continue restores completion immediately, avoids replaying
+  the completion notice, and fresh Start resets the objective normally
+
+Actual final GLBs (6)
+Full and lower-detail corrected-v3 shark, kraken and kaiju parse through actual
+GLTFLoader: embedded buffer/image ranges, bones and animated skinned positions
+are valid/finite. Node strips only bitmap material decoding; textures were
+structurally validated there. Subsequent real Mac WebGL QA successfully loaded
+all six asset states and rendered the creatures. Manifest records byte counts,
+hashes, triangles, primitives and bones, not a GPU performance guarantee.
+
+New first-person arm checks (17, plus 2 added app flows above)
+- Final actual GLB: 16,794 triangles, 37 bones, one material, embedded texture
+- Exact four clips/durations, normalized skin, finite poses and seamless loops
+- Controller load/error/deferred-disposal and shared-resource cleanup
+- Idle/swim/sprint/held scan, normalized 30/60/120Hz blends and reset
+- Same-world depthTest/depthWrite, bounded collision retraction, portrait
+  framing without X scaling and reduced-motion behavior
+- Pause/dt0 freezes mixer and transforms; blocked surface movement becomes idle
+- NEW: actual skinned palm projection across four clips and sway extremes at
+  390x844, 320x844 and 9:16; unchanged landscape and withdrawn near-solid reach
+These numerical checks do not draw pixels. Separate actual arms-build Mac
+QA is recorded in ARMS-MAC-QA.md: all four states, smoothing, pause/home/reset,
+deep lighting and corrected portrait screenshots were inspected. The runtime
+preview omitted the new source tests; its Mac60 result is not the cloud79 count.
+
+ACTUAL MAC BROWSER QA OF THE BASE BUILD, BEFORE ARMS
+Chrome154 / macOS27 / AppleM2 / real WebGL2 ANGLE Metal. See MAC-QA.md for
+method, evidence and limits. Actual pixels showed the title screen, terrain,
+caustics, plants, fish, HUD and textured/skinned creatures. No shader, WebGL
+or GLB-loading errors were observed in the completed route.
+Native clicks, drag and single F/Q presses worked. Sustained movement/scan used
+DOM KeyboardEvents on real canvas handlers because automation could not hold
+native keys; simulation/collisions/rendering remained real, with no teleport.
+All3scan objectives, surface and bell refill, return/upload, pause/resume,
+quality changes, reload and Continue were exercised. The Continue state bug
+was fixed and verified on the reloaded real page before source integration.
+An early window-targeted QA key probe caused one TypeError; the corrected
+canvas-targeted route had no further application-origin errors.
+
+PERFORMANCE EVIDENCE
+7-second rAF samples at one stationary near-Warden view averaged:
+High55.44, Medium57.01, Low57.86 FPS. These are short frame-cadence samples,
+not GPU timings, whole-map results or a steady60FPS guarantee. An earlier
+moving reef sample was about48FPS. Detailed interval outliers/draw counts are
+in MAC-QA.md and concrete implementation budgets in PERFORMANCE.txt.
+
+REMAINING REAL-DEVICE CHECKS
+- Successful pointer-lock acceptance (automation stayed unlocked; drag worked)
+- Physical held keyboard events, phone/touch and audio output
+- Long-session/whole-map frame pacing, other hardware and browser combinations
+The cloud Chromium IPC restriction remains; its own integration tests use
+stand-ins. It no longer prevents reporting the separate actual Mac QA above.
+
+No merge or website deployment was performed.
+
+New water optical checks (9, including air-side regression)
+Transmission decreases with distance and attenuates red first; bounded
+water-to-air Fresnel and critical angle; valid r170 shader includes/output
+ordering; one shared attenuation path without double fog; surface coverage
+inside the far radius; tier normal work changes in place; finite coherent
+depth/haze after 1,200 updates; exactly-once resource disposal.
+Actual water shader/pixel review is recorded in WATER-MAC-QA.md, including
+the integrated air-side fix and pale overhead/opaque-transmission limitations.
+
+Current motion candidate
+See CREATURE-MOTION.txt for measured braking and real-rig species checks. The
+full suite now includes finite idle/rest, blocked contact, input cleanup, no
+idle camera bob, shared LOD phase, articulated shark/Kraken, deforming jellyfish
+and stationary Warden behavior. Partial actual Mac motion review passed the Kraken extension/curl amplitude,
+pause/tier/response and jelly recovered-glide checks; see MOTION-MAC-QA.md.
+Water air-side fix is integrated and its earlier Mac results are summarized in
+WATER-MAC-QA.md; those are not motion-build pixel/performance claims.
+
+Second motion iteration coverage
+Six new motion regressions cover localized base-to-tip unrolling, actual full/low
+Kraken chain extension versus curled shape, recovered jelly glide, regional wake
+reversal delay, and fish forward alignment with its actual path tangent. The19-test vegetation adapter is now wired into the game with its final Blender
+asset, plus9 actual-asset world/lifecycle regressions. Sixteen new jelly-tissue
+checks verify PNG channels/UVs/lazy ownership while preserving exact prior motion.
+Two manifest checks enforce every shipped GLB hash/budget and the tissue atlas.
+The art milestone passed205; the original rig suite had270 and this revision347. Actual integrated-art GPU/pixel review remains
+pending; prior motion-review stills are not evidence for these newer materials.
+
+Deep-rig stage
+See RIG-IMPLEMENTATION.md for22 wet-lock,21 indoor-physics,18 rig integration,
+2 basin, one production buoy-to-rig application route and one rig asset-integrity
+regression. Actual collision traversal never teleports through the doors.
+Renderer/input-image stand-ins remain explicit in application tests; independent
+Blender renders are not game WebGL or FPS evidence. New device QA is still open.
+
+DIVE-TOOLS-V5 FOLLOW-UP
+23 heading tests quantify constant-heading, turning, pitch/strafe/diagonals,
+contacts/knockback, input changes and30/60/120Hz steering.23 sonar and18 torch
+controller tests plus new world/arm/app integration checks cover the new tools.
+See DIVE-TOOLS.txt for exact semantics and budgets. The final full aggregate
+passed347/347 after replacing a flaky25/40ms GLB wait with actual parse promises.
+
+MAC FULL-V4 CORRECTION
+The exact prior v4 source was267/270 on Mac Node26.4 arm64, not270/270. Raw
+comparison isolated negligible environment-specific numeric differences with
+identical historical source hashes. Strict same-runtime frozen generators now
+replace cross-platform floating-point goldens. Mutation tests still reject one
+ULP changes, and asset-byte hashes are unchanged. See MAC-V4-NUMERIC-QA.md.
+The repaired347-check v5 suite subsequently passed347/347 on Mac. Later sea, ink,
+island and rig render coverage remains distinct from that terminal result.
+
+The full-v4 Mac browser Start/read call stalled2228s. Far-rig/plant/jelly loading
+was observed, but no actual rig route, new-tool pixels, shadow compilation,
+console-clean result or GPU timings were established. No blind retry of that
+same browser route is represented as testing.
+
+INK MILESTONE
+394/394 cloud tests pass for this committed ink stage, including25 actual-rig
+Kraken pose checks,11 defense-state checks,21 pooled-cloud checks,4 actual-GLB
+integration checks and one production-app visibility/composition regression.
+The previous v5 has since passed347/347 on Mac, and actual UI photographs show
+named sonar targets with range, bearing and depth. The ink suite remains unrun
+on Mac. Cloud Chromium local review navigation was blocked by
+net::ERR_BLOCKED_BY_CLIENT; no bypass attempted. See INK-DEFENSE.md.
+
+ISLAND MILESTONE
+435/435 cloud tests pass after final terrain, low-obstacle and renderer-floor
+corrections. New coverage:7 terrain,16 outdoor physics,14 actual-asset island
+renderer,2 sky,1 asset-integrity and1 full production-handler beach/summit/sea
+route check. First-person hands remain visible on land with idle/carry pose.
+Final terrain has37,646 triangles in5 tiles; corridor interpolation stays
+below5.7cm. Full GLB, instance, shader-source and byte/MIME checks remain
+separate from actual browser pixels. The test suite uses explicit renderer
+stand-ins for app flow; no new Mac/GPU pass is implied.
+See ISLAND-EXPLORATION.md and the ordinary-button /island-review.html scene.
+
+DYNAMIC SEA / V8
+443/443 after integration:7 new pure state/wave/shore/depth/resource checks and
+1 production-app sea-time/pause/reset/no-idle-drift check. The full aggregate
+retains actual-art rig/creature tests, torch, ink, shore climb and rig-lock routes.
+The new static caustic shader key is explicitly recognized by the torch's safe
+shadow-caster filter; deformed foliage remains excluded without matching depth.
+All49 runtime JavaScript modules pass syntax and relative-import checks.
+/sea-review.html provides fixed Calm/Moderate/Rough phases and surface/shore/3m/30m
+views using real production assets. Its source/runtime checks are not pixels.
+The public Site is reachable in cloud Chromium, but GL_VENDOR=Disabled prevents
+a WebGL context even for the prior unmodified surfing build. This environment
+cannot establish new shader compilation, rendered appearance or FPS. No graphics
+security settings or alternate network routes were used to bypass that limit.

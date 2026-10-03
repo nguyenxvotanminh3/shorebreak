@@ -1,0 +1,44 @@
+VỰC LẶNG — Blender habitat and tissue integration candidate
+
+The art pass follows the articulated-motion milestone, whose actual Mac results
+are documented in MOTION-MAC-QA.md. The older motion commit and review ZIP remain
+preserved. This candidate is a separate local branch; it is not published.
+
+BLENDER VEGETATION
+One1,586,968-byte GLB contains six grounded species with paired full/low meshes:
+ribbon kelp1220/132 triangles, split kelp1042/144, eelgrass916/132, red algae1120/152,
+sea fan1192/188, and plate coral1080/108. These are authored textured meshes, not
+billboard image substitutes. The fan's lattice has actual openings. All share
+one opaque material and1024px color plus512px normal/ORM maps.
+
+The game reuses its seeded habitat rather than changing terrain, objectives or
+colliders. COLOR_0 alpha becomes a dedicated root-to-tip bend attribute; it never
+makes the atlas transparent. Shared GPU sway keeps roots planted and delays the
+tips. Camera-near detailed plants and lower-detail plants use pooled instancing,
+with global high/medium/low limits of320/220/140 total and96/64/0 full meshes.
+Maximum plant draws are12/12/6, before view-dependent visibility. Old procedural
+kelp/fans remain as a load-error fallback and are hidden after assets are ready.
+
+KRAKEN REFINEMENT
+The new full/low exports are53,901/18,000 triangles and3,768,704/1,441,556 bytes.
+Organic mantle folds, finer surface texture, recessed eyes and locally weighted
+suckers were improved. All59 bone names, bind transforms and animation samples
+match the preceding production rig exactly. The stronger runtime extension and
+recurl controls remain unchanged. The modeler's Blender renders include those
+extreme poses; those renders are separate from browser QA of this new art.
+
+JELLY TISSUE
+One shared261,387-byte512px RGBA DATA atlas adds canals, internal tissue rosettes,
+pleats and thickness variation. It is sampled within the existing two materials;
+no extra mesh, vertex, render pass or draw is added. The game retains the current
+deforming procedural shell and length-preserving trails. The Blender source-art
+mesh/morph study is not a runtime replacement or proof of the latest motion.
+
+VALIDATION AND LIMITS
+Actual asset bytes, hashes, geometry, rig and loading/lifecycle contracts are
+verified in automated checks. Blender previews of the final art were inspected.
+The Mac disconnected after the preceding motion review, so this integrated art
+has not yet been accepted in actual game pixels, shader compilation or frame
+measurements. Previous FPS/rAF samples must not be presented as measurements of
+this candidate. Retest near plants, depth/fog, transparent tissue, quality changes,
+LOD transitions, continuous creature cycles and real gameplay when available.

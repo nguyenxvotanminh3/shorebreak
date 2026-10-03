@@ -1,0 +1,45 @@
+VUC LANG — underwater surface and color candidate
+
+Reference observations
+The first supplied reference is an above-water illustration with dark blue-gray
+wave faces, broken silver highlights and surface relief. The second directly
+shows the desired underwater view: a bright cyan light window overhead,
+irregular dark wave streaks, blue distant water and readable nearby structures.
+Only water, light and color cues are used; no ship, base, UI or image texture
+from either reference is included in the game.
+
+Implementation
+- One viewer-following 720m surface patch, 8,192 triangles and one draw
+- Low-frequency vertex swell plus wind-aligned irregular analytic normal bands
+- 3 / 4 / 5 bounded normal octaves for Low / Medium / High
+- Derivative-based detail fading reduces fine-distance shimmer
+- View-angle water/air Fresnel and critical-window cues, distorted by wave normals
+- Procedural sky radiance with broad cloud/silver highlight variation
+- Blue-gray reflected-light approximation outside the transmitted light window
+- Shared wavelength-dependent eye-path absorption/scattering for the surface
+  and world materials, with red attenuating faster than green/blue
+- Neutral blue-white nearby ambient/sunlight instead of the earlier green cast
+- Fog fallback for actors, distant background and optical haze share a color
+
+Budget and scope
+No offscreen capture, reflection/refraction render target, extra render pass,
+texture download, per-frame material/geometry creation or additional lights.
+The original world interface, terrain, gameplay colliders and arm code remain
+unchanged. Quality changes reuse uniforms without new shader variants.
+
+This is art-directed single-pass water, not physically exact ocean transport.
+The light window refracts a procedural sky, not actual above-water scene
+objects. Reflected underwater radiance is analytical, not a captured scene.
+It does not add fluid simulation, real volumetric scattering or a ray tracer.
+
+Verification
+Source suite: 87 tests pass, including 8 new optical/resource checks for
+transmission/Fresnel bounds, r170 shader chunks and ordering, no double fog,
+finite patch coverage, tier work limits, 1,200 stable updates and disposal.
+These checks do not compile GPU GLSL or validate new rendered appearance.
+The Mac overlay has been handed off for real shallow/upward, grazing/horizon,
+deep-water, moving-wave and quality-tier inspection. Final screenshots and
+remaining limits will be recorded separately after that visual gate.
+
+Earlier Mac performance numbers describe previous candidates. They are not
+benchmarks of this shader. No new push, merge or deployment is included.

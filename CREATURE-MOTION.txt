@@ -1,0 +1,89 @@
+VUC LANG — finite player stop and articulated animal candidate
+
+Player control diagnosis and fix
+The previous core had no passive current or buoyancy force. It did retain
+exponentially decaying release velocity: ~1.176m normal /1.866m sprint coast,
+with visible motion still remaining after half a second. Boundary-clamped
+velocity also remained internally nonzero. Source changes use stronger finite
+release braking while keeping the same acceleration, cancel blocked velocity,
+and roll back unresolved overlaps to the previous clear position. All 388 actual
+solid approach/release probes now settle with exactly zero later displacement.
+
+Measured controlled release now settles in 0.289 s / 0.258 m normal and 0.311 s / 0.410 m
+sprint. Camera bob follows resolved movement and is exactly absent at rest;
+menu auto-pan is removed. Blur, visibility, pointer cancellation and stale
+repeat/release cases are covered. Read-only debug exposes input, physical and
+resolved velocity, camera position, injuries and rescue count for diagnosis.
+Clean Mac baseline idle was already stable; a shared-tab QA driver confounded
+some earlier observation. Do not describe that interference as a game defect.
+
+Species mechanics
+- Shark: seven weighted joints drive progressive body-to-tail lateral waves,
+  caudal propulsion, independent pectoral trim, turn asymmetry and alert load.
+  Actual exported motion was not absent: tail travel was about 1.13 m peak-to-peak
+  at game scale. Sampled enhanced cruise/faster states reach about 1.60 / 1.97 m.
+  There is no separate dorsal joint and the jaw is unweighted; no fake motion
+  is claimed for them. Dorsal stabilization follows the weighted trunk.
+- Kraken: 58 actual joints (head, mantle and eight seven-joint arms) coordinate
+  mantle contraction/recovery, a jet phase peaking at pi/2, delayed traveling
+  curls, distal drag, steering and cautious gathering. The initial overlay increased sampled tip motion
+  about1.9x; the later explicit unfolding cycle is described below. Mantle width
+  contraction exceeds5% in numerical samples.
+  There is no independent fin rig, so no fin articulation is invented.
+- Jellyfish: four original organisms now exist in the diving world. Nonuniform
+  bell mesh contraction drives thrust and recovery; segmented trails retain
+  link lengths while lagging and bending against velocity. Individuals have
+  different phases, sizes and habitat/player responses. Four bells plus four
+  trail meshes use two shared materials, at most 8 transparent draws, 6,876
+  pooled vertices and 12,672 high-tier triangles; lower tiers reduce work.
+- Warden: the rig has single-bone legs, without knees/ankles. Its moving patrol
+  is removed rather than pretending a standing clip is a walk. The near-seabed
+  sentinel uses breathing, upper-body/head tracking, jaw/arm warning and delayed
+  tail joints. This is not a full foot-contact IK or walking solution.
+- Small fish: instanced fusiform geometry now has shader-deformed body/caudal
+  motion rather than only rigid object travel. Five schools retain shared
+  geometry/material and distance/tier counts.
+
+Integration
+Large animals steer with bounded speed/acceleration/turn rate and local
+avoidance, using 90 Hz fixed-step kinematics. Cruise, acceleration, turn and
+player-response weights transition smoothly. Mantle pulses and body strokes
+are tied to the same speed/phase state that moves the actor. This is plausible
+animation/kinematic drag, not full fluid, muscle or ecosystem simulation.
+
+Both GLB LODs consume the same phase, clip time and behavior state. Actual
+controlled authored tracks are sampled with cached interpolants before joint
+offsets: this avoids Three.js skipping unchanged channels and accumulating an
+overlay. No GLB bytes were altered. Only the visible variant is posed; phase
+continues while hidden. Pause freezes state and pose; reset is deterministic.
+
+Verification
+Initial motion candidate:153 tests passed. New coverage includes 16 drift,
+12 shark, 12 Kraken, 13 jellyfish, 4 locomotion/integrated-LOD tests and additional
+production app regressions. Actual full/LOD skin data is used for deformation,
+state, seam, finite-bound, no-accumulation and resource checks. These are not
+browser pixels. Subsequent actual Mac idle/release and paired articulated-pose findings are
+recorded in MOTION-MAC-QA.md; continuous-cycle acceptance remains incomplete.
+
+Known inherited limits
+Extreme downward near-floor views can occlude the hands and expose a forearm
+edge; there is no complete contact IK. The right-mounted torch brightens the
+right hand more. The new water remains a procedural opaque approximation,
+with its paler overhead color documented in WATER-MAC-QA.md. No new push,
+merge or deployment is authorized by this local candidate.
+
+Second motion iteration, partial actual Mac closeup acceptance
+- The earlier Kraken overlay did move bones, but chain straightness varied only
+  about0.05–0.11 in cruise, retaining a strongly curled silhouette. A localized
+  unrolling front now changes all actual arms from ~0.40–0.49 end-to-end/arc-length
+  ratio to~0.88–0.91, then progressively recurls. Arm lengths remain constant.
+- Jelly now includes a fully reopened interpulse glide, stronger delayed oral
+  tissue curvature and three regional wake-velocity memories for turning lag.
+- A verified small-fish yaw sign error is corrected: forward follows the actual
+  circular path tangent rather than reflecting its Z component.
+- See MARINE-MOTION-RESEARCH.md for primary sources and implementation inferences.
+Actual Mac first-candidate QA verified stable idle and zero velocity after~0.31s
+release, plus rendered jelly bell/trail changes. The second iteration passed the actual Kraken curl-versus-extension amplitude
+gate, pause/tier rendering and response checks; see MOTION-MAC-QA.md. Complete
+continuous-cycle, jelly reversal and in-world review remain unfinished. Do not substitute the
+numerical extension ratio or the motion-review harness for actual visual review.

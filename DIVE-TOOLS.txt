@@ -1,0 +1,81 @@
+VỰC LẶNG — steering, sonar and flashlight revision
+Build label: dive-tools-v5 (visible in Settings and the read-only debug snapshot)
+
+Movement diagnosis and correction
+The camera's YXZ forward/right basis was correct across 7,920 heading/input
+combinations. A reproducible usability defect was world-space acceleration
+lag while holding W and turning: a sustained right turn produced 1.563 m/s
+camera-left velocity. Input-produced momentum now follows active viewing
+changes. Contact deflections and creature impulses remain in world space;
+changed movement controls, neutral coasting, gravity and release braking keep
+their prior behavior. The regression case is now at numerical zero lateral
+speed. This does not establish whether the reported browser also had contact,
+stale-version or held-input issues. The build label and lateral/resolved speed
+instrumentation help distinguish them. Player input still clears on blur,
+pause, cancellation and reset; full rest remains exact.
+
+Sonar
+Q emits one bounded 140 m scan with a nine-second cooldown. An echo only arrives
+after its outbound/return distance delay. It reports distance, bearing and depth,
+and fades five seconds after arrival. The HUD shows up to three useful nearby
+returns; world markers use arrived echoes rather than a global timer revealing
+arbitrarily distant targets. Nearby directly visible landmarks and the known
+return buoy retain separate passive navigation cues. Objectives still require
+physical travel and holding E; sonar neither collects nor saves samples.
+
+The contact set includes uncollected samples, the buoy, diving-bell air pocket,
+rig entrance and three large creatures. Creature returns are saved emission
+positions, labeled as old observations, not live tracking. The Warden contact
+uses an approximate body center 12 m above its grounded root. The sensor can
+hold at most16 returns from at most256 supplied contacts, independent of visual
+quality. It pauses with the expedition, resets on new dive, and is rejected or
+cleared when the receiver is in air/a dry room.
+
+Real nominal sound speed1500 m/s gives a140 m round trip in about0.187s.
+The display expands this to2.8s for readable feedback and labels the expansion.
+This is a game sensor, omitting acoustic obstruction, multipath, refraction,
+noise and Doppler. It is not a physical sonar simulator.
+References: https://oceanexplorer.noaa.gov/technology/sonar/
+https://oceanservice.noaa.gov/facts/sound.html
+
+Flashlight
+F toggles one camera-centered real spotlight. Its target follows the camera's
+world-space forward axis. Inverse-square falloff, soft cone and one shadow map
+make the beam distance-dependent and allow terrain/opaque walls/doors to block
+it. No decorative cone mesh or screen-brightness overlay is used. Dynamic
+skinned creatures can receive shadows but do not cast them in this budget;
+shader-swaying vegetation is also excluded from casting without a matching
+custom depth shader. Transparent objects do not cast opaque wall shadows.
+
+Low/Medium/High: range30/38/46m; shadow map256/512/768px; maximum scheduled
+refresh12/20/30Hz. Unchanged stationary shadows are reused. Moving doors dirty
+the map. Shadow caching can lag motion by up to83/50/33ms. This adds a bounded
+shadow rendering pass and must be profiled on hardware; no FPS claim is made.
+
+Deep ambient/sun/fill endpoints change from .48/.24/.24 to .14/.055/.045.
+Shallow daylight stays2/2.5/.65. Explicit interior factors are .5/.08/.08;
+local rig lamps remain. The torch is centered near the eye instead of behind
+the right palm, and a verified r170 arm-material hook caps only its incident
+illumination before BRDF evaluation. Other lights, textures and ordinary depth
+occlusion remain. Hook failure cleans up the partial owned arm model safely.
+
+Verification
+23 heading checks;23 pure-sonar checks;18 flashlight checks; new arm/world
+integration checks; production-entrypoint checks cover real handler W+turn,
+finite delayed echo markers/readout/expiry/pause/dry reset, one torch and its
+quality/aim/toggle/pause/arm hook. DOM/renderer/bitmap/loader stand-ins are explicit
+in app tests. Actual asset structure and shader-source checks are separate.
+A full-suite asynchronous GLB test was also corrected to await its actual parse
+promises rather than assuming completion within25/40ms under parallel load.
+
+No new browser pixels, shadow compilation, torch on/off A/B, native-held-key
+route or GPU timings have been verified for this revision. Earlier Mac water,
+arms and creature-pose evidence is not validation of these new lighting changes.
+Mac's latest full-v4 browser attempt stalled; repeating that blind route is not
+part of this verification. No push, merge or deployment is included.
+
+Later v5 device follow-up
+The verified v5 ZIP subsequently passed347/347 tests on Mac. Ordinary visible
+UI screenshots confirmed named sonar targets, distance, bearing and depth.
+The shallow flashlight on/off pair preserved hand detail but did not establish
+a useful dark-scene beam. Those checks do not validate newer ink/island visuals.
