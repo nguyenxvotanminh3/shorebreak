@@ -1,0 +1,42 @@
+{
+  "name": "Vực Lặng / Rig07",
+  "originalArt": true,
+  "units": "metres",
+  "upAxis": "+Y",
+  "entryFacing": "+Z",
+  "models": [
+    {
+      "file": "rig-far.glb",
+      "bytes": 133960,
+      "sha256": "a4ce319d296dd014af7b4f1e651a6a6bdcb4b152f11fb55df2e014ef2376cbb4",
+      "triangles": 2476,
+      "primitives": 12,
+      "materials": 5,
+      "images": 0
+    },
+    {
+      "file": "rig-full.glb",
+      "bytes": 3839176,
+      "sha256": "159f9c64dadcbb5f3d8678eb6b18d93a00c2e5002ac4e7b12be829f5c4ff3d6e",
+      "triangles": 136036,
+      "primitives": 47,
+      "materials": 16,
+      "images": 0
+    },
+    {
+      "file": "rig-medium.glb",
+      "bytes": 1254256,
+      "sha256": "a711be0a55c431381a9018424e097f73e97a0a749518cc74a3e2c0adbf4b1945",
+      "triangles": 47000,
+      "primitives": 44,
+      "materials": 15,
+      "images": 0
+    }
+  ],
+  "notes": "Actual Blender exports; frame-time and WebGL appearance still need device review. Separate shared exterior/interior material groups, no copied textures, no transmission pass.",
+  "layout": {
+    "file": "rig-manifest.json",
+    "bytes": 23938,
+    "sha256": "c7ec59a8799b90a538b1b69326f714fd5d2dd3135c1dc0713be11e0cd70fc0d3"
+  }
+}

@@ -1,0 +1,56 @@
+VỰC LẶNG — camera-mounted diver arms
+
+Purpose
+Two visible anatomical gloved hands and wetsuit forearms replace the empty
+first-person foreground. This change prioritizes player presence; creature
+behavior is unchanged.
+
+Animation
+Four Blender-authored skeletal clips: idle, swim, sprint and scan. Swimming
+strength and tempo follow actual simulation velocity, including inertial
+slowdown, rather than starting a rigid looping prop whenever W is pressed.
+Sprint blends in only as the diver gains speed. Held E near a valid signal
+blends into the deliberate right-hand interaction pose. Releasing or losing
+the target smoothly returns to the appropriate movement state.
+Pause freezes the mixer, transitions and sway. New dives reset the rig.
+Reduced-motion mode removes idle drift and look sway while preserving the
+functional swimming and interaction actions.
+
+Perspective and occlusion
+The real rig is parented to the existing perspective camera in the same
+world scene, with depthTest/depthWrite enabled. There is no always-on-top
+foreground overlay and no extra render pass. World geometry can occlude hands.
+Short hand-space probes use the real seafloor and cylindrical solid colliders
+to gently retract the rig at close surfaces. This is not full contact IK.
+Narrow screens shift the rig forward to retain hand framing without stretching
+or compressing the anatomy horizontally. Clip framing and near-plane checks
+are recorded in the asset's validation/metadata.
+
+Implementation
+abyss-arms.js owns the one-time GLB load, pooled animation actions, pose blending,
+short collision probes, reset and complete resource disposal. abyss.js connects
+it to actual speed, sprint/scan intent, pause/menu status, reduced motion and
+camera aspect. Read-only debug snapshots expose the arm load/pose state for QA.
+
+Asset provenance
+The anatomical hands/forearms are adapted from this repository's licensed
+MakeHuman CC0 athlete. The dedicated view rig, wetsuit/glove surface treatment,
+framing and four clips were authored for this game in Blender. Existing CC0
+notices are preserved; detailed provenance accompanies the GLB.
+
+Verification status
+Full source suite: 79 tests pass, including 17 arms/controller/real-GLB/portrait
+checks. Separate actual Mac WebGL2 inspection observed idle/swim/sprint/scan,
+release smoothing, pause/home/reset, blocked movement and deep-water hands.
+Portrait clipping was fixed and screenshot-verified at 390x844 and 320x844.
+The portrait correction moves the rig farther away without stretching anatomy;
+it withdraws the extra reach near walls/floor. Narrower aspects are not promised.
+
+Read ARMS-MAC-QA.md for exact coverage. Looking nearly straight down while
+resting on the floor can still hide the hands and expose a forearm edge; this
+is not full contact IK. The right-mounted torch brightens the right hand much
+more than the left. No unverified contact/lighting change was made after QA.
+Actual arms-build Medium rAF samples were ~57.9 FPS deep and ~54 FPS at the
+shallow reef, seven seconds each in different scenes, not an A/B GPU benchmark.
+The older numbers in MAC-QA.md predate the arms and remain separate.
+This arm feature is local only; no push, merge or deployment is included.

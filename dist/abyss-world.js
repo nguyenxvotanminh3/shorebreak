@@ -1,6 +1,10 @@
 import * as THREE from './vendor/three.module.js';
+import { GLTFLoader } from './vendor/GLTFLoader.js';
+import { WATER_OPTICS, WATER_PATH_GLSL, createWaterSurfaceMaterial } from './abyss-water.js';
+import { createAbyssVegetation } from './abyss-vegetation.js';
+import {createSeaStateController,createSeaUniforms,updateSeaUniforms,SEA_UNIFORMS_GLSL} from './abyss-sea-state.js';
 
-// Original geometry and shaders. No downloaded textures or runtime network requests.
+// Original seeded habitat plus a locally bundled, optional Blender vegetation atlas.
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const mix=(a,b,t)=>a+(b-a)*t;
 const smooth=(a,b,v)=>{const t=clamp((v-a)/(b-a),0,1);return t*t*(3-2*t);};
@@ -13,7 +17,9 @@ export function terrainHeight(x,z){
   const rolling=Math.sin(x*.036+z*.017)*2.7+Math.sin(z*.066-x*.024)*1.55+Math.cos(x*.082+z*.038)*.65;
   const channel=-4.2*Math.exp(-Math.pow((x+10+Math.sin(z*.024)*22)/36,2))*smooth(52,145,-z);
   const shoulders=smooth(102,206,Math.abs(x))*10;
-  return -23-49*descent+rolling+channel+shoulders;
+  // The added southern basin begins beyond the original230m reef boundary.
+  const deepBasin=58*smooth(232,282,-z);
+  return -23-49*descent+rolling+channel+shoulders-deepBasin;
 }
 
 function random(seed=17281){return()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t^=t+Math.imul(t^t>>>7,61|t);return((t^t>>>14)>>>0)/4294967296;};}
@@ -62,23 +68,28 @@ function fanGeometry(){
   return mergeGeometries(parts);
 }
 
-/** Finite, seeded underwater habitat. Geometry/material counts never grow in update(). */
-export function createAbyssWorld(scene){
+/** Seeded habitat; fixed resource budgets after the optional one-time GLB load. */
+export function createAbyssWorld(scene,options={}){
   const root=new THREE.Group();root.name='ABYSS / original underwater world';scene.add(root);
   const geometries=new Set(),materials=new Set(),chunks=[],colliders=[],lights=[],pulses=[];
+  const vegetationSites=[],vegetationFallbacks=new Set();
   const rng=random(),temp=new THREE.Object3D(),color=new THREE.Color();
-  const clock={value:0},causticStrength={value:1},fogTint={value:new THREE.Color(0x087b92)},fogDensity={value:.0085};
+  const seaController=createSeaStateController(),seaState=seaController.state,seaUniforms=createSeaUniforms(seaState);
+  const clock={value:0},causticStrength={value:1},fogTint={value:new THREE.Color(0x168cc0)},waterDensity={value:1};
   let tier=1,cullClock=1,disposed=false,lastPlayer={x:0,y:-4,z:18};
+  let vegetationRequested=false,vegetationReplaced=false,releaseVegetationGate;
   const previousFog=scene.fog,previousBackground=scene.background;
-  scene.fog=new THREE.FogExp2(0x167f95,.009);
-  scene.background=new THREE.Color(0x087b92);
+  scene.fog=new THREE.FogExp2(0x168cc0,.008);
+  scene.background=new THREE.Color(0x168cc0);
   const ownFog=scene.fog,ownBackground=scene.background;
   const registerG=g=>(geometries.add(g),g),registerM=m=>(materials.add(m),m);
 
   // Analytical caustics in world coordinates stay coherent across every material.
   const caustics=(m,sway=0)=>{
     m.onBeforeCompile=shader=>{
+      Object.assign(shader.uniforms,seaUniforms);
       shader.uniforms.uAbyssTime=clock;shader.uniforms.uAbyssCaustics=causticStrength;
+      shader.uniforms.uWaterScatter=fogTint;shader.uniforms.uWaterDensity=waterDensity;
       shader.vertexShader='uniform float uAbyssTime;varying vec3 vAbyssWorld;\n'+shader.vertexShader;
       shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>',`#include <begin_vertex>
         ${sway?`float phase=position.y*.7+uAbyssTime*.65;
@@ -93,19 +104,29 @@ export function createAbyssWorld(scene){
           abyssPosition=instanceMatrix*abyssPosition;
         #endif
         vAbyssWorld=(modelMatrix*abyssPosition).xyz;`);
-      shader.fragmentShader='uniform float uAbyssTime;uniform float uAbyssCaustics;varying vec3 vAbyssWorld;\n'+shader.fragmentShader;
+      shader.fragmentShader='uniform float uAbyssTime;uniform float uAbyssCaustics;varying vec3 vAbyssWorld;\n'+WATER_PATH_GLSL+SEA_UNIFORMS_GLSL+shader.fragmentShader;
       shader.fragmentShader=shader.fragmentShader.replace('#include <opaque_fragment>',`
-        vec2 cp=vAbyssWorld.xz*.37+vec2(uAbyssTime*.085,-uAbyssTime*.065);
-        float c1=sin(cp.x+sin(cp.y*1.47+uAbyssTime*.13));
-        float c2=sin(cp.y*.91-sin(cp.x*1.24-uAbyssTime*.17));
-        float c3=sin(cp.x*.76+cp.y*.73+uAbyssTime*.18);
+        vec2 cp=vAbyssWorld.xz*.37+vec2(uSeaWaveTime*.085,-uSeaWaveTime*.065);
+        float c1=sin(cp.x+sin(cp.y*1.47+uSeaWaveTime*.13));
+        float c2=sin(cp.y*.91-sin(cp.x*1.24-uSeaWaveTime*.17));
+        float c3=sin(cp.x*.76+cp.y*.73+uSeaWaveTime*.18);
         float caustic=pow(1.-abs((c1+c2+c3)/3.),14.);
         float sunDepth=exp(min(vAbyssWorld.y+12.,0.)*.038);
-        outgoingLight+=vec3(.075,.22,.19)*caustic*sunDepth*uAbyssCaustics;
-        outgoingLight*=vec3(.88,1.,1.02);
+        float seaLight=1.-uSeaSeverity*.38*exp(min(vAbyssWorld.y,0.)/26.);
+        outgoingLight+=vec3(.075,.22,.19)*caustic*sunDepth*uAbyssCaustics*seaLight;
+        float waterPath=length(cameraPosition-vAbyssWorld);
+        float meanDepth=max(0.,-(cameraPosition.y+vAbyssWorld.y)*.5);
+        vec3 waterTransmission=abyssWaterTransmittance(waterPath,meanDepth);
+        outgoingLight*=waterTransmission;
         #include <opaque_fragment>`);
+      // r170 fog_fragment runs after output conversion. Our absorption belongs
+      // before tone mapping; shared haze is composed before output conversion.
+      // Remove stock fog here so the same eye path is never attenuated twice.
+      shader.fragmentShader=shader.fragmentShader.replace('#include <tonemapping_fragment>',`#include <tonemapping_fragment>
+        gl_FragColor.rgb+=uWaterScatter*(1.-waterTransmission);`)
+        .replace('#include <fog_fragment>','');
     };
-    m.customProgramCacheKey=()=>`abyss-caustics-v1-${sway}`;return m;
+    m.customProgramCacheKey=()=>`abyss-caustics-water-v3-${sway}`;return m;
   };
   const standard=(props={},sway=0)=>registerM(caustics(new THREE.MeshStandardMaterial({roughness:.92,metalness:0,...props}),sway));
   const stone=standard({color:0x52676b,roughness:1});
@@ -149,6 +170,29 @@ export function createAbyssWorld(scene){
     o.instanceMatrix.needsUpdate=true;if(o.instanceColor)o.instanceColor.needsUpdate=true;o.computeBoundingSphere();parent.add(o);o.userData.fullCount=items.length;return o;
   };
 
+  // Reuse recorded habitat transforms, never the shared seeded RNG. Heights
+  // are authored metres, not legacy ribbon scale: short grass stays short.
+  const kelpSpecies=['ribbon_kelp','split_kelp','ribbon_kelp','eelgrass','split_kelp','ribbon_kelp','red_algae','eelgrass'];
+  const rockProbe=new THREE.Mesh(rockGeo,rockMat),plateRay=new THREE.Raycaster();
+  plateRay.ray.direction.set(0,-1,0);
+  const recordVegetation=(kelps,fans,rocks,tile)=>{
+    for(let i=0;i<kelps.length;i++){
+      const p=kelps[i],species=kelpSpecies[(i+tile*3)%kelpSpecies.length];
+      const targetHeight=species==='ribbon_kelp'?clamp(p.sy*4,3.2,7.8):species==='split_kelp'?clamp(p.sy*2.6,3,6.6):species==='eelgrass'?clamp(p.sx*1.1,1,2):clamp(p.sx*.9,1,1.6);
+      vegetationSites.push({x:p.x,y:p.y,z:p.z,rotation:p.ry,species,targetHeight});
+    }
+    for(const p of fans)vegetationSites.push({x:p.x,y:p.y,z:p.z,rotation:p.ry,species:'sea_fan',targetHeight:clamp(p.sy*2.2,1.3,3.6)});
+    for(let i=0;i<rocks.length;i++){
+      const p=rocks[i];if(p.sx<2.6||p.z< -165||(i+tile)%4!==0)continue;
+      // One inset plate colony on selected broad rock tops. Raycast the exact
+      // unchanged rock mesh so tilted/deformed stones cannot leave it floating.
+      rockProbe.position.set(p.x,p.y,p.z);rockProbe.rotation.set(p.rx,p.ry,p.rz);rockProbe.scale.set(p.sx,p.sy,p.sz);rockProbe.updateMatrixWorld(true);
+      plateRay.ray.origin.set(p.x,p.y+p.sy*2,p.z);
+      const hit=plateRay.intersectObject(rockProbe,false)[0];
+      if(hit)vegetationSites.push({x:p.x,y:hit.point.y-.07,z:p.z,rotation:p.ry,species:'plate_coral',targetHeight:clamp(p.sx*.32,1,1.7)});
+    }
+  };
+
   // 48 independent 55 m tiles: 55,296 terrain triangles, with actual distance culling.
   let rockCount=0,coralCount=0,kelpCount=0,fanCount=0,tubeCount=0;
   for(let iz=0;iz<6;iz++)for(let ix=0;ix<8;ix++){
@@ -186,6 +230,8 @@ export function createAbyssWorld(scene){
       const s=.5+rng()*1.3;for(let k=0;k<3;k++)tubes.push({x:x+k*.36,y:h,z:z+Math.sin(k*3)*.32,sx:s*(1-k*.12),sy:s*(1+k*.2),sz:s*(1-k*.12),rz:(k-1)*.12,c:z< -120?0x4fa5b5:0xd69b82});
     }
     const rockMesh=instance(rockGeo,rockMat,rocks,group),coralMesh=instance(coralGeo,coral,corals,group),kelpMesh=instance(kelpGeo,kelpMat,kelps,group),fanMesh=instance(fanGeo,fanMat,fans,group),tubeMesh=instance(tubeGeo,coral,tubes,group);
+    recordVegetation(kelps,fans,rocks,iz*8+ix);
+    for(const plant of [kelpMesh,fanMesh])if(plant){plant.userData.vegetationFallback=true;vegetationFallbacks.add(plant);}
     rockCount+=rocks.length;coralCount+=corals.length;kelpCount+=kelps.length;fanCount+=fans.length;tubeCount+=tubes.length;
     chunks.push({group,x:cx,z:cz,details:[coralMesh,kelpMesh,fanMesh,tubeMesh].filter(Boolean),rock:rockMesh});
   }
@@ -277,17 +323,12 @@ export function createAbyssWorld(scene){
     point(0x49b4ff,42,32,x,base+8,archZ+3);point(0x78ffdf,16,15,x,base+3,z+2);solid(x,base+1.8,z,1.2,3.6);
   }
 
-  // Sunlit underside of the surface: large waves plus fine moving optical ripples.
-  const surfaceMat=registerM(new THREE.ShaderMaterial({side:THREE.DoubleSide,depthWrite:true,fog:false,uniforms:{uTime:clock,uFogColor:fogTint,uFogDensity:fogDensity},vertexShader:`
-    uniform float uTime;varying vec3 vWorld;void main(){vec3 p=position;p.z+=sin(p.x*.07+uTime*.6)*.22+cos(p.y*.09-uTime*.4)*.14;vWorld=(modelMatrix*vec4(p,1.)).xyz;gl_Position=projectionMatrix*viewMatrix*vec4(vWorld,1.);}`,
-    fragmentShader:`uniform float uTime;uniform float uFogDensity;uniform vec3 uFogColor;varying vec3 vWorld;void main(){
-      vec2 p=vWorld.xz;float a=sin(p.x*.24+sin(p.y*.17+uTime*.32)*2.);
-      float b=sin(p.y*.22+sin(p.x*.19-uTime*.22)*1.7);
-      float ripple=pow(1.-abs((a+b)*.5),7.);float sun=exp(-length(p-vec2(-25.,-40.))*.024);
-      vec3 water=mix(vec3(.018,.21,.30),vec3(.22,.71,.74),.46+sun*.36);water+=ripple*vec3(.045,.16,.15)+pow(sun,7.)*vec3(.75,.91,.75);
-      float opticalDistance=length(cameraPosition-vWorld);float distanceFade=exp(-opticalDistance*opticalDistance*uFogDensity*uFogDensity);water=mix(uFogColor,water,distanceFade);gl_FragColor=vec4(water,1.);}`
-  }));
-  const surface=mesh(registerG(new THREE.PlaneGeometry(680,680,44,44)),surfaceMat,0,.1,-75);surface.rotation.x=-Math.PI/2;
+  // One moving surface, 8,192 triangles. World-space wave coordinates retain
+  // their phase when this finite patch follows the viewer inside the map.
+  const surfaceMat=registerM(createWaterSurfaceMaterial(clock,fogTint,waterDensity,seaUniforms));
+  const surface=mesh(registerG(new THREE.PlaneGeometry(WATER_OPTICS.surfaceSize,WATER_OPTICS.surfaceSize,WATER_OPTICS.surfaceSegments,WATER_OPTICS.surfaceSegments)),surfaceMat,0,.1,18);
+  surface.name='Ocean surface / underside optics';surface.rotation.x=-Math.PI/2;
+  surface.geometry.computeBoundingSphere();surface.geometry.boundingSphere.radius+=2.0;
 
   // Five shared, soft volume cones. They are visual shafts, never collision solids.
   const beamMat=registerM(new THREE.ShaderMaterial({transparent:true,depthWrite:false,side:THREE.DoubleSide,blending:THREE.AdditiveBlending,uniforms:{uTime:clock,uStrength:{value:1}},vertexShader:`varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,fragmentShader:`uniform float uTime;uniform float uStrength;varying vec2 vUv;void main(){float edge=pow(sin(vUv.x*3.14159265),4.);float end=sin(vUv.y*3.14159265);float pulse=.8+.2*sin(vUv.y*17.+uTime*.24);gl_FragColor=vec4(.25,.77,.82,edge*end*pulse*.033*uStrength);}`}));
@@ -307,14 +348,49 @@ export function createAbyssWorld(scene){
   }));
   const particles=new THREE.Points(particlesGeo,particleMat);particles.frustumCulled=false;root.add(particles);
 
-  const ambient=new THREE.HemisphereLight(0x86e2dc,0x153541,2.0);root.add(ambient);
-  const sunlight=new THREE.DirectionalLight(0xbaffea,2.5);sunlight.position.set(-44,60,15);sunlight.target.position.set(10,-40,-90);root.add(sunlight,sunlight.target);
+  const ambient=new THREE.HemisphereLight(0xa3d9f1,0x173c52,2.0);root.add(ambient);
+  const sunlight=new THREE.DirectionalLight(0xe1f3ff,2.5);sunlight.position.set(-44,60,15);sunlight.target.position.set(10,-40,-90);root.add(sunlight,sunlight.target);
   const fill=new THREE.DirectionalLight(0x397dac,.65);fill.position.set(100,-5,-100);root.add(fill);
-  const shallowFog=new THREE.Color(0x137c91),deepFog=new THREE.Color(0x031421),shallowBG=new THREE.Color(0x076f8e),deepBG=new THREE.Color(0x020e19);
-  const stats={terrainTiles:48,terrainTriangles:48*24*24*2,rocks:rockCount,corals:coralCount,kelp:kelpCount,fans:fanCount,tubes:tubeCount,particles:particleCount,lightShafts:5,pointLights:lights.length,colliders:colliders.length,quality:'medium',visibleChunks:0,materials:materials.size,geometries:geometries.size,bounds:BOUNDS,originalArt:true,notes:'All repeated habitat instanced; no per-frame geometry/material allocation; up to 4 local point lights; no dynamic shadows.'};
-  const tierFrom=q=>typeof q==='number'?clamp(Math.round(q),0,2):q==='low'?0:q==='high'?2:1;
+  const shallowFog=new THREE.Color(0x168cc0),deepFog=new THREE.Color(0x04192b);
+  const stats={terrainTiles:48,terrainTriangles:48*24*24*2,rocks:rockCount,corals:coralCount,kelp:kelpCount,fans:fanCount,tubes:tubeCount,particles:particleCount,lightShafts:5,pointLights:lights.length,colliders:colliders.length,quality:'medium',surfaceTriangles:WATER_OPTICS.surfaceSegments**2*2,surfaceNormalOctaves:4,visibleChunks:0,materials:materials.size,geometries:geometries.size,bounds:BOUNDS,originalArt:true,notes:'All repeated habitat instanced; no per-frame geometry/material allocation; up to 4 local point lights; flashlight owns its bounded single-spot shadows.'};
+  stats.seaState=seaState;
+  stats.lighting={darkness:0,indoors:false,ambient:2,sunlight:2.5,fill:.65};
+  // Allocate only an empty root before the first useful dive update. The
+  // cancellable gate also settles ready(false) when disposed before a request,
+  // without starting a fetch in a later microtask.
+  const vegetationGate=new Promise(resolve=>{releaseVegetationGate=resolve;});
+  const vegetation=createAbyssVegetation(root,{
+    sites:vegetationSites,quality:'medium',assetURL:options.vegetationAssetURL,
+    loader:{async loadAsync(url){await vegetationGate;if(disposed)throw new Error('World disposed before vegetation load');return(options.vegetationLoader||new GLTFLoader()).loadAsync(url);}},
+    materialDecorator:material=>caustics(material,0),
+    onAsset:event=>{
+      if(disposed)return;
+      if(event.status==='ready'){
+        vegetationReplaced=true;
+        for(const plant of vegetationFallbacks)plant.visible=false;
+      }
+      syncVegetationStats();
+      options.onAsset?.(event);
+    }
+  });
+  stats.vegetation={};
+  function syncVegetationStats(){
+    Object.assign(stats.vegetation,vegetation.stats);
+    if(!vegetationRequested&&!disposed)stats.vegetation.status='idle';
+    stats.vegetation.fallbackActive=!vegetationReplaced&&!disposed;
+    // Imported resources are owned/disposed by the adapter, never registered
+    // twice with the procedural world's resource owner.
+    stats.materials=materials.size+(vegetation.stats.status==='ready'?vegetation.stats.materials:0);
+    stats.geometries=geometries.size+(vegetation.stats.status==='ready'?vegetation.stats.geometries:0);
+  }
+  syncVegetationStats();
+  vegetationSites.length=0; // The adapter copied its finite placement catalogue.
+  const tierFrom=q=>typeof q==='number'&&Number.isFinite(q)?clamp(Math.round(q),0,2):q==='low'?0:q==='high'?2:1;
   function setQuality(q){
+    if(disposed)return;
     tier=tierFrom(q);stats.quality=['low','medium','high'][tier];
+    vegetation.setQuality(stats.quality);syncVegetationStats();
+    surfaceMat.uniforms.uWaterOctaves.value=WATER_OPTICS.normalOctaves[tier];stats.surfaceNormalOctaves=WATER_OPTICS.normalOctaves[tier];
     particlesGeo.setDrawRange(0,[450,850,1350][tier]);beams.visible=tier>0;beamMat.uniforms.uStrength.value=tier===2?1:.72;causticStrength.value=[.68,1,1.12][tier];
     for(const chunk of chunks)for(let i=0;i<chunk.details.length;i++){
       const o=chunk.details[i];o.count=Math.max(1,Math.floor(o.userData.fullCount*[.46,.75,1][tier]));
@@ -325,16 +401,33 @@ export function createAbyssWorld(scene){
   function update(dt,time,player,quality){
     if(disposed)return;
     if(quality!==undefined&&tierFrom(quality)!==tier)setQuality(quality);
-    clock.value=Number.isFinite(time)?time:clock.value+Math.max(0,dt||0);
+    const advancing=Number.isFinite(dt)&&dt>0;
+    if(advancing){const next=Number.isFinite(time)?time:clock.value+dt;if(Math.abs(next)<1e12)clock.value=Math.max(0,next);}
+    else if(time===0)clock.value=0;
     const p=player?.position||player||lastPlayer;
     const px=Number.isFinite(p.x)?p.x:0,py=Number.isFinite(p.y)?p.y:-4,pz=Number.isFinite(p.z)?p.z:18;
     lastPlayer.x=px;lastPlayer.y=py;lastPlayer.z=pz;
+    seaController.update(dt,clock.value,Math.max(0,-py));updateSeaUniforms(seaUniforms,seaState);
+    const seaInfluence=seaState.severity*seaState.depthAttenuation;
+    // The app identifies menu/playing/paused; status-less camera/debug callers
+    // become useful after submerging below the -4.4 m menu view.
+    const diving=player?.status==='playing'||(player?.status===undefined&&py< -8);
+    if(!vegetationRequested&&advancing&&diving){vegetationRequested=true;releaseVegetationGate();}
+    vegetation.update(dt,clock.value,lastPlayer,stats.quality);syncVegetationStats();
     const depth=smooth(13,78,-py),south=smooth(70,205,-pz),darkness=clamp(depth*.78+south*.22,0,1);
-    ownFog.color.copy(shallowFog).lerp(deepFog,darkness);ownFog.density=mix(.0085,.018,darkness);fogDensity.value=ownFog.density;
-    ownBackground.copy(shallowBG).lerp(deepBG,darkness);fogTint.value.copy(ownFog.color);
-    ambient.intensity=mix(2.0,.48,darkness);sunlight.intensity=mix(2.5,.24,darkness);fill.intensity=mix(.65,.24,darkness);
-    beamMat.uniforms.uStrength.value=(tier===2?1:.72)*(1-darkness*.8);
-    particleMat.uniforms.uOrigin.value.set(px,Math.min(-4,py),pz);particleMat.uniforms.uOpacity.value=mix(.46,.7,darkness);
+    ownFog.color.copy(shallowFog).lerp(deepFog,darkness).multiplyScalar(1-.12*seaInfluence);ownFog.density=mix(.008,.0165,darkness);waterDensity.value=mix(1,1.24,darkness);
+    ownBackground.copy(ownFog.color);fogTint.value.copy(ownFog.color);
+    surface.position.x=px;surface.position.z=pz;
+    // Preserve sunlit shallow water, leaving a useful torch contrast at depth.
+    // The app supplies the facility's actual room-volume result explicitly;
+    // being in air (surface or bell) does not imply being inside a room.
+    const indoors=player?.indoors===true;
+    ambient.intensity=mix(2.0,.14,darkness)*(1-.16*seaInfluence)*(indoors?.5:1);
+    sunlight.intensity=mix(2.5,.055,darkness)*(1-.38*seaInfluence)*(indoors?.08:1);
+    fill.intensity=mix(.65,.045,darkness)*(1-.10*seaInfluence)*(indoors?.08:1);
+    Object.assign(stats.lighting,{darkness,indoors,ambient:ambient.intensity,sunlight:sunlight.intensity,fill:fill.intensity});
+    beamMat.uniforms.uStrength.value=(tier===2?1:.72)*(1-darkness*.8)*(1-.38*seaInfluence);
+    particleMat.uniforms.uOrigin.value.set(px,Math.min(-4,py),pz);particleMat.uniforms.uOpacity.value=p.movementMode==='walk'||p.inAir||py>=0?0:mix(.46,.7,darkness);
     // Material sharing keeps pulse updates constant-sized; no new resources are created.
     cyan.emissiveIntensity=2.1+Math.sin(clock.value*1.25)*.28;
     amber.emissiveIntensity=1.65+Math.sin(clock.value*.8)*.12;
@@ -345,17 +438,20 @@ export function createAbyssWorld(scene){
       for(const chunk of chunks){
         const distance=Math.hypot(px-chunk.x,pz-chunk.z);chunk.group.visible=distance<radius+39;
         if(chunk.group.visible)visible++;
-        for(let i=0;i<chunk.details.length;i++)chunk.details[i].visible=distance<[65,98,145][tier]+25;
+        for(let i=0;i<chunk.details.length;i++){
+          const detail=chunk.details[i];detail.visible=!(vegetationReplaced&&vegetationFallbacks.has(detail))&&distance<[65,98,145][tier]+25;
+        }
       }
       stats.visibleChunks=visible;
     }
   }
   function dispose(){
     if(disposed)return;disposed=true;scene.remove(root);
+    vegetation.dispose();releaseVegetationGate();syncVegetationStats();
     for(const g of geometries)g.dispose();for(const m of materials)m.dispose();
     if(scene.fog===ownFog)scene.fog=previousFog;if(scene.background===ownBackground)scene.background=previousBackground;
-    chunks.length=0;colliders.length=0;pulses.length=0;lights.length=0;
+    chunks.length=0;colliders.length=0;pulses.length=0;lights.length=0;vegetationFallbacks.clear();
   }
   setQuality('medium');update(0,0,lastPlayer);
-  return {root,update,setQuality,dispose,stats,colliders,landmarks,airBell:landmarks.B.airPocket,terrainHeight,bounds:BOUNDS};
+  return {root,update,setQuality,dispose,stats,seaState,colliders,landmarks,airBell:landmarks.B.airPocket,terrainHeight,bounds:BOUNDS,vegetation};
 }

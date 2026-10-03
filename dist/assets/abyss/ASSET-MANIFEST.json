@@ -1,14 +1,14 @@
 {
-  "version": "abyss-prototype-1",
+  "version": "abyss-reef-art-candidate-2",
   "date": "2026-10-02",
   "sharkRevision": "v3 corrected continuous jaw and subterminal mouth",
   "axis": "Y up, -Z forward",
-  "notes": "Counts extracted from embedded GLB contents, not GPU timings. Model studio renders were reviewed by asset authors. Subsequent real Mac Chrome/WebGL2 QA loaded all six variants and rendered the creatures successfully; see MAC-QA.md for device, method and remaining limits.",
+  "notes": "Asset byte/triangle counts are not GPU timings. Motion commit229ad9d passed a partial actual Mac articulated-pose gate before this newer art replacement; see MOTION-MAC-QA.md. Refined Kraken, Blender vegetation and jelly tissue atlas are validated separately; their integrated game appearance still requires browser QA.",
   "models": [
     {
       "file": "kraken-lod.glb",
-      "bytes": 1485084,
-      "sha256": "5a640e0ad6f32d37585feb9a1a6c6b126f299c04631354f69680184736a16f4e",
+      "bytes": 1441556,
+      "sha256": "d37f79c3d3e01fb2bef0742be4021eb69c516cde0660ae1a5397e1229978d871",
       "triangles": 18000,
       "meshPrimitives": 4,
       "materials": 4,
@@ -19,23 +19,24 @@
       "images": [
         {
           "mimeType": "image/png",
-          "bytes": 109668
+          "bytes": 78555
         },
         {
           "mimeType": "image/png",
-          "bytes": 89896
+          "bytes": 78314
         },
         {
           "mimeType": "image/png",
-          "bytes": 50682
+          "bytes": 40488
         }
-      ]
+      ],
+      "revision": "Refined organic surface and skin weights; exact prior bind transforms and animation values preserved"
     },
     {
       "file": "kraken.glb",
-      "bytes": 4147892,
-      "sha256": "c5c399de343a3c1c519110882f2247cd29710c8aa6ba81a482a64c7a3614e1d9",
-      "triangles": 55873,
+      "bytes": 3768704,
+      "sha256": "3924dcea63e023965d1bf3396b719f243deb36de9b22134c12b523e4eab6043a",
+      "triangles": 53901,
       "meshPrimitives": 4,
       "materials": 4,
       "bones": 59,
@@ -45,17 +46,18 @@
       "images": [
         {
           "mimeType": "image/png",
-          "bytes": 384742
+          "bytes": 274143
         },
         {
           "mimeType": "image/png",
-          "bytes": 281235
+          "bytes": 250438
         },
         {
           "mimeType": "image/png",
-          "bytes": 234805
+          "bytes": 122207
         }
-      ]
+      ],
+      "revision": "Refined organic surface and skin weights; exact prior bind transforms and animation values preserved"
     },
     {
       "file": "shark-lod.glb",
@@ -66,7 +68,7 @@
       "materials": 3,
       "bones": 8,
       "clips": [
-        "Cruise \u00b7 2.4 second seamless swim"
+        "Cruise · 2.4 second seamless swim"
       ],
       "images": [
         {
@@ -88,7 +90,7 @@
       "materials": 3,
       "bones": 8,
       "clips": [
-        "Cruise \u00b7 2.4 second seamless swim"
+        "Cruise · 2.4 second seamless swim"
       ],
       "images": [
         {
@@ -110,7 +112,7 @@
       "materials": 6,
       "bones": 18,
       "clips": [
-        "Abyssal threat idle \u00b7 4 second seamless loop"
+        "Abyssal threat idle · 4 second seamless loop"
       ],
       "images": [
         {
@@ -144,7 +146,7 @@
       "materials": 6,
       "bones": 18,
       "clips": [
-        "Abyssal threat idle \u00b7 4 second seamless loop"
+        "Abyssal threat idle · 4 second seamless loop"
       ],
       "images": [
         {
@@ -168,6 +170,80 @@
           "bytes": 272061
         }
       ]
+    },
+    {
+      "file": "diver-arms.glb",
+      "bytes": 981224,
+      "sha256": "074e1d623304e5b99737b406b239d7c891b9413cb95148c16c4a821bd46dc179",
+      "triangles": 16794,
+      "meshPrimitives": 1,
+      "materials": 1,
+      "bones": 37,
+      "clips": [
+        "idle",
+        "scan",
+        "sprint",
+        "swim"
+      ],
+      "role": "Camera-local first-person diver arms; CC0 anatomical derivative with custom rig, tailoring and clips",
+      "images": [
+        {
+          "mimeType": "image/png",
+          "bytes": 33650
+        }
+      ]
+    },
+    {
+      "file": "vegetation.glb",
+      "bytes": 1586968,
+      "sha256": "84fac5f7e06cf021ca2993648f5562ec0c9adbc8abd2a9f5808c2e9ab713c3fa",
+      "triangles": 7426,
+      "meshPrimitives": 12,
+      "materials": 1,
+      "bones": 0,
+      "clips": [],
+      "images": [
+        {
+          "mimeType": "image/png",
+          "bytes": 288905
+        },
+        {
+          "mimeType": "image/png",
+          "bytes": 753697
+        },
+        {
+          "mimeType": "image/png",
+          "bytes": 220899
+        }
+      ],
+      "notes": "Twelve full/low meshes for six rooted species; one shared opaque atlas, COLOR_0 alpha becomes independent bend weight; instanced at runtime",
+      "nodes": [
+        "veg_ribbon_kelp_full",
+        "veg_ribbon_kelp_low",
+        "veg_split_kelp_full",
+        "veg_split_kelp_low",
+        "veg_eelgrass_full",
+        "veg_eelgrass_low",
+        "veg_red_algae_full",
+        "veg_red_algae_low",
+        "veg_sea_fan_full",
+        "veg_sea_fan_low",
+        "veg_plate_coral_full",
+        "veg_plate_coral_low"
+      ]
+    }
+  ],
+  "krakenRevision": "Organic tissue and sucker deformation refinement; 59-bone contract preserved",
+  "runtimeTextures": [
+    {
+      "file": "jelly-tissue-atlas-512.png",
+      "bytes": 261387,
+      "sha256": "1e9dbf1e6fe231e0291f2610b534da132aa5d10f4854cf1d1833dcd3074c2673",
+      "width": 512,
+      "height": 512,
+      "kind": "tissue-channel-data",
+      "colorSpace": "NoColorSpace",
+      "notes": "One shared original RGBA tissue atlas; alpha encodes density, not direct output opacity. No extra geometry or draw calls."
     }
   ]
 }

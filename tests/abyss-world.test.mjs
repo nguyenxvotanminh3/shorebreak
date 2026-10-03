@@ -186,7 +186,8 @@ const flushLoads = async () => { await Promise.resolve(); await Promise.resolve(
 test('life loads each LOD once, switches with hysteresis, and never damages through invisible unloaded creatures', async t => {
   const calls = [], assets = [];
   t.mock.method(GLTFLoader.prototype, 'loadAsync', async url => { calls.push(url); return syntheticGltf(); });
-  const scene = new THREE.Scene(), life = createAbyssLife(scene, { onAsset: value => assets.push(value) });
+  const scene = new THREE.Scene(), life = createAbyssLife(scene, { onAsset: value => assets.push(value),
+    jellyTextureLoader: { loadAsync: async () => new THREE.Texture() } });
   try {
     life.update(0, 0, { x: 1000, y: -20, z: 1000 }, 'medium');
     assert.equal(calls.length, 0);
@@ -216,6 +217,8 @@ test('life loads each LOD once, switches with hysteresis, and never damages thro
     assert.equal(calls.filter(url => url.endsWith('/shark-lod.glb')).length, 1);
     assert.equal(calls.filter(url => url.endsWith('/shark.glb')).length, 1);
     assert.ok(assets.every(asset => asset.status === 'ready'));
+    assert.ok(assets.some(asset => asset.id === 'jelly-tissue' && asset.tier === 'shared'));
+    assert.equal(life.snapshot().jellyTissue, 'ready');
     life.update(0, 0, { x: 1000, y: 0, z: 1000 }, 'low');
     assert.equal(life.threats.length, 0);
     assert.ok(life.creatures.every(creature => !creature.root.visible));
@@ -310,4 +313,61 @@ test('failed creature assets report once, remain nonhazardous and do not retry e
     assert.ok(reports.every(report => report.status === 'error' && report.message === 'fixture network failure'));
     assert.equal(life.threats.length, 0);
   } finally { life.dispose(); }
+});
+
+// These check deterministic light inputs and scene objects. They do not draw
+// pixels or establish perceived luminance, GPU shadow quality or frame rate.
+test('lighting preserves shallow daylight and has explicit darker deep endpoints', () => {
+  const world = createAbyssWorld(new THREE.Scene());
+  const close = (a, b) => assert.ok(Math.abs(a - b) < 1e-10, `${a} != ${b}`);
+  try {
+    const hemisphere = world.root.children.find(node => node.isHemisphereLight);
+    const directional = world.root.children.filter(node => node.isDirectionalLight);
+    const snapshot = world.stats.lighting;
+    world.update(0, 0, { x: 0, y: -4.4, z: 18, status: 'menu' });
+    assert.equal(snapshot.darkness, 0); assert.equal(snapshot.indoors, false);
+    close(hemisphere.intensity, 2); close(directional[0].intensity, 2.5); close(directional[1].intensity, .65);
+    world.update(0, 0, { x: 45, y: -130, z: -335, status: 'paused' });
+    assert.equal(snapshot.darkness, 1); close(hemisphere.intensity, .14); close(directional[0].intensity, .055); close(directional[1].intensity, .045);
+    close(snapshot.ambient, hemisphere.intensity); close(snapshot.sunlight, directional[0].intensity); close(snapshot.fill, directional[1].intensity);
+    assert.ok(snapshot.ambient < .48); assert.ok(snapshot.sunlight < .24); assert.ok(snapshot.fill < .24);
+    assert.equal(world.stats.lighting, snapshot);
+  } finally { world.dispose(); }
+});
+
+test('only explicit room containment applies indoor lighting factors, not air or walking alone', () => {
+  const world = createAbyssWorld(new THREE.Scene());
+  const close = (a, b) => assert.ok(Math.abs(a - b) < 1e-10, `${a} != ${b}`);
+  try {
+    const deep = { x: 45, y: -130, z: -335, status: 'paused' };
+    world.update(0, 0, deep); const outside = { ...world.stats.lighting };
+    world.update(0, 0, { ...deep, indoors: true });
+    const inside = world.stats.lighting;
+    assert.equal(inside.indoors, true); close(inside.ambient, outside.ambient * .5); close(inside.sunlight, outside.sunlight * .08); close(inside.fill, outside.fill * .08);
+    for (const extra of [{ indoors: false }, { indoors: undefined, inAir: true }, { indoors: undefined, movementMode: 'walk' }, { indoors: 'true' }]) {
+      world.update(0, 0, { ...deep, ...extra });
+      assert.deepEqual(world.stats.lighting, outside);
+    }
+    world.update(0, 0, { x: 0, y: .1, z: 18, status: 'paused', inAir: true });
+    close(world.stats.lighting.ambient, 2); close(world.stats.lighting.sunlight, 2.5); close(world.stats.lighting.fill, .65);
+  } finally { world.dispose(); }
+});
+
+test('lighting interpolation stays finite, monotone and tier-independent without changing geometry', () => {
+  const world = createAbyssWorld(new THREE.Scene()), before = resources(world.root);
+  try {
+    let previous = { ambient: Infinity, sunlight: Infinity, fill: Infinity };
+    for (let i = 0; i <= 100; i++) {
+      world.update(0, 0, { x: 0, y: -4 - i * 1.3, z: 18 - i * 3.6, status: 'paused' });
+      const light = world.stats.lighting;
+      for (const key of ['ambient', 'sunlight', 'fill']) { assert.ok(Number.isFinite(light[key]) && light[key] > 0); assert.ok(light[key] <= previous[key]); }
+      previous = { ...light };
+    }
+    for (const tier of ['low', 'medium', 'high']) {
+      world.update(0, 0, { x: 0, y: -134, z: -342, status: 'paused' }, tier);
+      assert.deepEqual(world.stats.lighting, previous);
+    }
+    const after = resources(world.root); assert.deepEqual(after.geometries, before.geometries); assert.deepEqual(after.materials, before.materials);
+    for (const [geometry, attributes] of before.attributes) for (const [key, array] of Object.entries(attributes)) assert.equal(geometry.attributes[key].array, array);
+  } finally { world.dispose(); }
 });

@@ -1,0 +1,21 @@
+{
+  "version": "island-ecosystem-v7",
+  "date": "2026-10-03",
+  "notes": "Original Blender pack; fixed geometry budgets are not browser FPS evidence. Runtime extracts named LOD prototypes and instances them.",
+  "models": [
+    {
+      "file": "coast_ecosystem.glb",
+      "bytes": 3511260,
+      "sha256": "527a0e02c8f7b72a3220cb5855e548031d3c5f65ef184a3d6337966fdaf0cb3b",
+      "triangles": 26926,
+      "primitives": 30,
+      "materials": 1,
+      "images": 1
+    }
+  ],
+  "layout": {
+    "file": "manifest.json",
+    "bytes": 24162,
+    "sha256": "da45abb8a040df545fafba50f87325a449488bbcd772bd0d8a67771b13b48010"
+  }
+}

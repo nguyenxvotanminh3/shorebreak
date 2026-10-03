@@ -1,0 +1,913 @@
+{
+  "pack": "Vực Lặng • Coastal Island Ecosystem",
+  "version": "1.0.0",
+  "authorship": "Original procedural geometry and original painted/procedural atlas; no downloaded or copied models or textures.",
+  "units": "meters",
+  "gltf_up_axis": "+Y",
+  "blender_up_axis": "+Z",
+  "root": "ground contact at origin; origin fixed for all LODs",
+  "material_count": 1,
+  "alpha_mode": "OPAQUE",
+  "double_sided": true,
+  "atlas": "coast_atlas_512.png",
+  "atlas_resolution": [
+    512,
+    512
+  ],
+  "wind": {
+    "attribute": "TEXCOORD_1",
+    "u": "bend weight 0..1",
+    "v": "stable phase 0..1",
+    "note": "Optional. Ignore for static assets; do not interpret as lightmap UV. Trunks use small weights, leaf tips high weights, rocks zero."
+  },
+  "prototype_collection": "coast_ecosystem.glb",
+  "assets": [
+    {
+      "id": "palm_tall",
+      "description": "coconut-palm-inspired tall coastal tree",
+      "biome": "beach",
+      "collision_radius_m": 0.38,
+      "clear_trunk_height_m": 5.8,
+      "lods": [
+        {
+          "level": 0,
+          "node": "palm_tall_LOD0",
+          "file": "palm_tall_lod0.glb",
+          "triangles": 3242,
+          "vertices_blender": 3362,
+          "bounds_gltf": {
+            "min": [
+              -2.8644909858703613,
+              0.0,
+              -3.806671142578125
+            ],
+            "max": [
+              4.37569522857666,
+              9.147624015808105,
+              3.784177541732788
+            ]
+          },
+          "distance_hint_m": 0
+        },
+        {
+          "level": 1,
+          "node": "palm_tall_LOD1",
+          "file": "palm_tall_lod1.glb",
+          "triangles": 420,
+          "vertices_blender": 491,
+          "bounds_gltf": {
+            "min": [
+              -2.4425883293151855,
+              0.0,
+              -3.892979621887207
+            ],
+            "max": [
+              4.37569522857666,
+              9.202751159667969,
+              3.3187034130096436
+            ]
+          },
+          "distance_hint_m": 55
+        }
+      ],
+      "placement": {
+        "slope_limit_degrees": 12,
+        "scale_range": [
+          0.82,
+          1.18
+        ],
+        "yaw": "random 0..360 degrees",
+        "align": "world up for vegetation; terrain-normal tilt <=12 degrees for rocks",
+        "collision": "trunk cylinder only"
+      }
+    },
+    {
+      "id": "palm_leaning",
+      "description": "wind-shaped leaning coastal palm",
+      "biome": "beach",
+      "collision_radius_m": 0.45,
+      "clear_trunk_height_m": 4.6,
+      "lods": [
+        {
+          "level": 0,
+          "node": "palm_leaning_LOD0",
+          "file": "palm_leaning_lod0.glb",
+          "triangles": 3242,
+          "vertices_blender": 3362,
+          "bounds_gltf": {
+            "min": [
+              -1.2425687313079834,
+              0.0,
+              -2.9221537113189697
+            ],
+            "max": [
+              5.126351356506348,
+              7.814475059509277,
+              2.9178454875946045
+            ]
+          },
+          "distance_hint_m": 0
+        },
+        {
+          "level": 1,
+          "node": "palm_leaning_LOD1",
+          "file": "palm_leaning_lod1.glb",
+          "triangles": 420,
+          "vertices_blender": 491,
+          "bounds_gltf": {
+            "min": [
+              -0.8241634368896484,
+              0.0,
+              -3.03989577293396
+            ],
+            "max": [
+              5.126351356506348,
+              7.788853645324707,
+              2.755605936050415
+            ]
+          },
+          "distance_hint_m": 55
+        }
+      ],
+      "placement": {
+        "slope_limit_degrees": 12,
+        "scale_range": [
+          0.82,
+          1.18
+        ],
+        "yaw": "random 0..360 degrees",
+        "align": "world up for vegetation; terrain-normal tilt <=12 degrees for rocks",
+        "collision": "trunk cylinder only"
+      }
+    },
+    {
+      "id": "palm_young",
+      "description": "compact juvenile coastal palm",
+      "biome": "beach",
+      "collision_radius_m": 0.28,
+      "clear_trunk_height_m": 2.7,
+      "lods": [
+        {
+          "level": 0,
+          "node": "palm_young_LOD0",
+          "file": "palm_young_lod0.glb",
+          "triangles": 3242,
+          "vertices_blender": 3362,
+          "bounds_gltf": {
+            "min": [
+              -1.5529810190200806,
+              0.0,
+              -2.052471399307251
+            ],
+            "max": [
+              2.310157060623169,
+              5.383824348449707,
+              1.8353208303451538
+            ]
+          },
+          "distance_hint_m": 0
+        },
+        {
+          "level": 1,
+          "node": "palm_young_LOD1",
+          "file": "palm_young_lod1.glb",
+          "triangles": 420,
+          "vertices_blender": 491,
+          "bounds_gltf": {
+            "min": [
+              -1.3439064025878906,
+              0.0,
+              -2.1091468334198
+            ],
+            "max": [
+              2.310157060623169,
+              5.25307559967041,
+              1.8055229187011719
+            ]
+          },
+          "distance_hint_m": 55
+        }
+      ],
+      "placement": {
+        "slope_limit_degrees": 12,
+        "scale_range": [
+          0.82,
+          1.18
+        ],
+        "yaw": "random 0..360 degrees",
+        "align": "world up for vegetation; terrain-normal tilt <=12 degrees for rocks",
+        "collision": "trunk cylinder only"
+      }
+    },
+    {
+      "id": "pandanus",
+      "description": "prop-rooted pandanus-inspired shore tree",
+      "biome": "beach_edge",
+      "collision_radius_m": 0.7,
+      "clear_trunk_height_m": 0.9,
+      "lods": [
+        {
+          "level": 0,
+          "node": "pandanus_LOD0",
+          "file": "pandanus_lod0.glb",
+          "triangles": 490,
+          "vertices_blender": 465,
+          "bounds_gltf": {
+            "min": [
+              -1.9718735218048096,
+              0.0,
+              -2.051133871078491
+            ],
+            "max": [
+              2.2990639209747314,
+              3.8698363304138184,
+              1.9208308458328247
+            ]
+          },
+          "distance_hint_m": 0
+        },
+        {
+          "level": 1,
+          "node": "pandanus_LOD1",
+          "file": "pandanus_lod1.glb",
+          "triangles": 132,
+          "vertices_blender": 134,
+          "bounds_gltf": {
+            "min": [
+              -1.882431983947754,
+              0.0,
+              -2.1344153881073
+            ],
+            "max": [
+              2.1504952907562256,
+              3.133366346359253,
+              2.205939531326294
+            ]
+          },
+          "distance_hint_m": 55
+        }
+      ],
+      "placement": {
+        "slope_limit_degrees": 12,
+        "scale_range": [
+          0.82,
+          1.18
+        ],
+        "yaw": "random 0..360 degrees",
+        "align": "world up for vegetation; terrain-normal tilt <=12 degrees for rocks",
+        "collision": "trunk cylinder only"
+      }
+    },
+    {
+      "id": "pandanus_young",
+      "description": "compact pandanus-inspired shore plant",
+      "biome": "beach_edge",
+      "collision_radius_m": 0.35,
+      "clear_trunk_height_m": 0.4,
+      "lods": [
+        {
+          "level": 0,
+          "node": "pandanus_young_LOD0",
+          "file": "pandanus_young_lod0.glb",
+          "triangles": 490,
+          "vertices_blender": 465,
+          "bounds_gltf": {
+            "min": [
+              -1.007366418838501,
+              0.0,
+              -1.1652120351791382
+            ],
+            "max": [
+              1.34281325340271,
+              2.2567365169525146,
+              1.177883267402649
+            ]
+          },
+          "distance_hint_m": 0
+        },
+        {
+          "level": 1,
+          "node": "pandanus_young_LOD1",
+          "file": "pandanus_young_lod1.glb",
+          "triangles": 132,
+          "vertices_blender": 134,
+          "bounds_gltf": {
+            "min": [
+              -0.8918744921684265,
+              0.0,
+              -1.1060445308685303
+            ],
+            "max": [
+              1.3333749771118164,
+              1.8045655488967896,
+              1.2307226657867432
+            ]
+          },
+          "distance_hint_m": 28
+        }
+      ],
+      "placement": {
+        "slope_limit_degrees": 12,
+        "scale_range": [
+          0.82,
+          1.18
+        ],
+        "yaw": "random 0..360 degrees",
+        "align": "world up for vegetation; terrain-normal tilt <=12 degrees for rocks",
+        "collision": "trunk cylinder only"
+      }
+    },
+    {
+      "id": "coastal_broadleaf",
+      "description": "salt-pruned broadleaf coastal tree",
+      "biome": "lower_slope",
+      "collision_radius_m": 0.46,
+      "clear_trunk_height_m": 1.4,
+      "lods": [
+        {
+          "level": 0,
+          "node": "coastal_broadleaf_LOD0",
+          "file": "coastal_broadleaf_lod0.glb",
+          "triangles": 2920,
+          "vertices_blender": 3069,
+          "bounds_gltf": {
+            "min": [
+              -2.779550313949585,
+              0.0,
+              -2.7344017028808594
+            ],
+            "max": [
+              3.030421495437622,
+              5.259208679199219,
+              2.65017032623291
+            ]
+          },
+          "distance_hint_m": 0
+        },
+        {
+          "level": 1,
+          "node": "coastal_broadleaf_LOD1",
+          "file": "coastal_broadleaf_lod1.glb",
+          "triangles": 426,
+          "vertices_blender": 458,
+          "bounds_gltf": {
+            "min": [
+              -2.907208204269409,
+              0.0,
+              -2.498929738998413
+            ],
+            "max": [
+              2.768951892852783,
+              5.17185115814209,
+              2.1552252769470215
+            ]
+          },
+          "distance_hint_m": 55
+        }
+      ],
+      "placement": {
+        "slope_limit_degrees": 22,
+        "scale_range": [
+          0.82,
+          1.18
+        ],
+        "yaw": "random 0..360 degrees",
+        "align": "world up for vegetation; terrain-normal tilt <=12 degrees for rocks",
+        "collision": "trunk cylinder only"
+      }
+    },
+    {
+      "id": "canopy_umbrella",
+      "description": "spreading evergreen mountain canopy",
+      "biome": "slope",
+      "collision_radius_m": 0.62,
+      "clear_trunk_height_m": 3.7,
+      "lods": [
+        {
+          "level": 0,
+          "node": "canopy_umbrella_LOD0",
+          "file": "canopy_umbrella_lod0.glb",
+          "triangles": 2920,
+          "vertices_blender": 3069,
+          "bounds_gltf": {
+            "min": [
+              -5.430819034576416,
+              0.0,
+              -4.848762512207031
+            ],
+            "max": [
+              4.701844215393066,
+              9.676560401916504,
+              4.907801151275635
+            ]
+          },
+          "distance_hint_m": 0
+        },
+        {
+          "level": 1,
+          "node": "canopy_umbrella_LOD1",
+          "file": "canopy_umbrella_lod1.glb",
+          "triangles": 426,
+          "vertices_blender": 458,
+          "bounds_gltf": {
+            "min": [
+              -5.282992839813232,
+              0.0,
+              -4.800090789794922
+            ],
+            "max": [
+              4.660707950592041,
+              9.62778091430664,
+              4.913336277008057
+            ]
+          },
+          "distance_hint_m": 55
+        }
+      ],
+      "placement": {
+        "slope_limit_degrees": 38,
+        "scale_range": [
+          0.82,
+          1.18
+        ],
+        "yaw": "random 0..360 degrees",
+        "align": "world up for vegetation; terrain-normal tilt <=12 degrees for rocks",
+        "collision": "trunk cylinder only"
+      }
+    },
+    {
+      "id": "canopy_irregular",
+      "description": "asymmetric broadleaf mountain canopy",
+      "biome": "slope",
+      "collision_radius_m": 0.56,
+      "clear_trunk_height_m": 2.7,
+      "lods": [
+        {
+          "level": 0,
+          "node": "canopy_irregular_LOD0",
+          "file": "canopy_irregular_lod0.glb",
+          "triangles": 2920,
+          "vertices_blender": 3069,
+          "bounds_gltf": {
+            "min": [
+              -4.095603942871094,
+              0.0,
+              -4.01633358001709
+            ],
+            "max": [
+              4.403104782104492,
+              7.902325630187988,
+              4.227761268615723
+            ]
+          },
+          "distance_hint_m": 0
+        },
+        {
+          "level": 1,
+          "node": "canopy_irregular_LOD1",
+          "file": "canopy_irregular_lod1.glb",
+          "triangles": 426,
+          "vertices_blender": 458,
+          "bounds_gltf": {
+            "min": [
+              -3.340409755706787,
+              0.0,
+              -3.3909010887145996
+            ],
+            "max": [
+              3.961489200592041,
+              7.495452404022217,
+              3.7784650325775146
+            ]
+          },
+          "distance_hint_m": 55
+        }
+      ],
+      "placement": {
+        "slope_limit_degrees": 38,
+        "scale_range": [
+          0.82,
+          1.18
+        ],
+        "yaw": "random 0..360 degrees",
+        "align": "world up for vegetation; terrain-normal tilt <=12 degrees for rocks",
+        "collision": "trunk cylinder only"
+      }
+    },
+    {
+      "id": "shrub_round",
+      "description": "dense leathery-leaf coastal shrub",
+      "biome": "beach_edge",
+      "collision_radius_m": 0.34,
+      "clear_trunk_height_m": 0,
+      "lods": [
+        {
+          "level": 0,
+          "node": "shrub_round_LOD0",
+          "file": "shrub_round_lod0.glb",
+          "triangles": 728,
+          "vertices_blender": 791,
+          "bounds_gltf": {
+            "min": [
+              -0.6897995471954346,
+              0.0,
+              -0.7241880893707275
+            ],
+            "max": [
+              0.8095376491546631,
+              0.9054434299468994,
+              0.8110960721969604
+            ]
+          },
+          "distance_hint_m": 0
+        },
+        {
+          "level": 1,
+          "node": "shrub_round_LOD1",
+          "file": "shrub_round_lod1.glb",
+          "triangles": 126,
+          "vertices_blender": 141,
+          "bounds_gltf": {
+            "min": [
+              -0.658022940158844,
+              0.0,
+              -0.6446165442466736
+            ],
+            "max": [
+              0.7238643765449524,
+              0.9619668126106262,
+              0.7531613111495972
+            ]
+          },
+          "distance_hint_m": 28
+        }
+      ],
+      "placement": {
+        "slope_limit_degrees": 12,
+        "scale_range": [
+          0.82,
+          1.18
+        ],
+        "yaw": "random 0..360 degrees",
+        "align": "world up for vegetation; terrain-normal tilt <=12 degrees for rocks",
+        "collision": "optional conservative proxy"
+      }
+    },
+    {
+      "id": "shrub_tall",
+      "description": "wind-pruned understory shrub",
+      "biome": "lower_slope",
+      "collision_radius_m": 0.42,
+      "clear_trunk_height_m": 0,
+      "lods": [
+        {
+          "level": 0,
+          "node": "shrub_tall_LOD0",
+          "file": "shrub_tall_lod0.glb",
+          "triangles": 728,
+          "vertices_blender": 791,
+          "bounds_gltf": {
+            "min": [
+              -1.2439634799957275,
+              0.0,
+              -1.291501522064209
+            ],
+            "max": [
+              1.2907922267913818,
+              1.6679669618606567,
+              1.1985914707183838
+            ]
+          },
+          "distance_hint_m": 0
+        },
+        {
+          "level": 1,
+          "node": "shrub_tall_LOD1",
+          "file": "shrub_tall_lod1.glb",
+          "triangles": 126,
+          "vertices_blender": 141,
+          "bounds_gltf": {
+            "min": [
+              -1.2318075895309448,
+              0.0,
+              -0.9600699543952942
+            ],
+            "max": [
+              1.2907922267913818,
+              1.5497426986694336,
+              1.1394610404968262
+            ]
+          },
+          "distance_hint_m": 28
+        }
+      ],
+      "placement": {
+        "slope_limit_degrees": 22,
+        "scale_range": [
+          0.82,
+          1.18
+        ],
+        "yaw": "random 0..360 degrees",
+        "align": "world up for vegetation; terrain-normal tilt <=12 degrees for rocks",
+        "collision": "optional conservative proxy"
+      }
+    },
+    {
+      "id": "fern_cluster",
+      "description": "low arching tropical fern",
+      "biome": "understory",
+      "collision_radius_m": 0,
+      "clear_trunk_height_m": 0,
+      "lods": [
+        {
+          "level": 0,
+          "node": "fern_cluster_LOD0",
+          "file": "fern_cluster_lod0.glb",
+          "triangles": 770,
+          "vertices_blender": 805,
+          "bounds_gltf": {
+            "min": [
+              -0.8447271585464478,
+              0.0,
+              -0.6916351914405823
+            ],
+            "max": [
+              0.7790299654006958,
+              0.5329763293266296,
+              0.8060705661773682
+            ]
+          },
+          "distance_hint_m": 0
+        },
+        {
+          "level": 1,
+          "node": "fern_cluster_LOD1",
+          "file": "fern_cluster_lod1.glb",
+          "triangles": 140,
+          "vertices_blender": 175,
+          "bounds_gltf": {
+            "min": [
+              -0.7719970345497131,
+              0.0,
+              -0.6957046389579773
+            ],
+            "max": [
+              0.7790299654006958,
+              0.45669350028038025,
+              0.9184292554855347
+            ]
+          },
+          "distance_hint_m": 28
+        }
+      ],
+      "placement": {
+        "slope_limit_degrees": 22,
+        "scale_range": [
+          0.82,
+          1.18
+        ],
+        "yaw": "random 0..360 degrees",
+        "align": "world up for vegetation; terrain-normal tilt <=12 degrees for rocks",
+        "collision": "none"
+      }
+    },
+    {
+      "id": "dune_grass",
+      "description": "dense folded-blade dune grass",
+      "biome": "beach_edge",
+      "collision_radius_m": 0,
+      "clear_trunk_height_m": 0,
+      "lods": [
+        {
+          "level": 0,
+          "node": "dune_grass_LOD0",
+          "file": "dune_grass_lod0.glb",
+          "triangles": 336,
+          "vertices_blender": 392,
+          "bounds_gltf": {
+            "min": [
+              -0.4661303162574768,
+              0.0,
+              -0.43725115060806274
+            ],
+            "max": [
+              0.40163806080818176,
+              0.8084641695022583,
+              0.3935241401195526
+            ]
+          },
+          "distance_hint_m": 0
+        },
+        {
+          "level": 1,
+          "node": "dune_grass_LOD1",
+          "file": "dune_grass_lod1.glb",
+          "triangles": 64,
+          "vertices_blender": 80,
+          "bounds_gltf": {
+            "min": [
+              -0.3740105628967285,
+              0.0,
+              -0.43725115060806274
+            ],
+            "max": [
+              0.38474610447883606,
+              0.8084641695022583,
+              0.380304217338562
+            ]
+          },
+          "distance_hint_m": 28
+        }
+      ],
+      "placement": {
+        "slope_limit_degrees": 12,
+        "scale_range": [
+          0.82,
+          1.18
+        ],
+        "yaw": "random 0..360 degrees",
+        "align": "world up for vegetation; terrain-normal tilt <=12 degrees for rocks",
+        "collision": "none"
+      }
+    },
+    {
+      "id": "rock_boulder",
+      "description": "weathered coastal boulder",
+      "biome": "rock",
+      "collision_radius_m": 1.12,
+      "clear_trunk_height_m": 0,
+      "lods": [
+        {
+          "level": 0,
+          "node": "rock_boulder_LOD0",
+          "file": "rock_boulder_lod0.glb",
+          "triangles": 320,
+          "vertices_blender": 162,
+          "bounds_gltf": {
+            "min": [
+              -1.2741727828979492,
+              0.0,
+              -0.9860180616378784
+            ],
+            "max": [
+              1.3931632041931152,
+              1.7318120002746582,
+              0.9970739483833313
+            ]
+          },
+          "distance_hint_m": 0
+        },
+        {
+          "level": 1,
+          "node": "rock_boulder_LOD1",
+          "file": "rock_boulder_lod1.glb",
+          "triangles": 80,
+          "vertices_blender": 42,
+          "bounds_gltf": {
+            "min": [
+              -1.2327923774719238,
+              0.0,
+              -0.9039435982704163
+            ],
+            "max": [
+              1.2704201936721802,
+              1.6332837343215942,
+              1.0278724431991577
+            ]
+          },
+          "distance_hint_m": 28
+        }
+      ],
+      "placement": {
+        "slope_limit_degrees": 26,
+        "scale_range": [
+          0.82,
+          1.18
+        ],
+        "yaw": "random 0..360 degrees",
+        "align": "world up for vegetation; terrain-normal tilt <=12 degrees for rocks",
+        "collision": "optional conservative proxy"
+      }
+    },
+    {
+      "id": "rock_slab",
+      "description": "low beach rock shelf",
+      "biome": "rock",
+      "collision_radius_m": 1.25,
+      "clear_trunk_height_m": 0,
+      "lods": [
+        {
+          "level": 0,
+          "node": "rock_slab_LOD0",
+          "file": "rock_slab_lod0.glb",
+          "triangles": 320,
+          "vertices_blender": 162,
+          "bounds_gltf": {
+            "min": [
+              -1.6877076625823975,
+              0.0,
+              -1.0723339319229126
+            ],
+            "max": [
+              1.8091872930526733,
+              0.8064603805541992,
+              1.056109070777893
+            ]
+          },
+          "distance_hint_m": 0
+        },
+        {
+          "level": 1,
+          "node": "rock_slab_LOD1",
+          "file": "rock_slab_lod1.glb",
+          "triangles": 80,
+          "vertices_blender": 42,
+          "bounds_gltf": {
+            "min": [
+              -1.571625828742981,
+              0.0,
+              -0.9551937580108643
+            ],
+            "max": [
+              1.5082601308822632,
+              0.7532424926757812,
+              1.0343780517578125
+            ]
+          },
+          "distance_hint_m": 28
+        }
+      ],
+      "placement": {
+        "slope_limit_degrees": 26,
+        "scale_range": [
+          0.82,
+          1.18
+        ],
+        "yaw": "random 0..360 degrees",
+        "align": "world up for vegetation; terrain-normal tilt <=12 degrees for rocks",
+        "collision": "optional conservative proxy"
+      }
+    },
+    {
+      "id": "rock_cluster",
+      "description": "three interlocking coastal rocks",
+      "biome": "rock",
+      "collision_radius_m": 1.3,
+      "clear_trunk_height_m": 0,
+      "lods": [
+        {
+          "level": 0,
+          "node": "rock_cluster_LOD0",
+          "file": "rock_cluster_lod0.glb",
+          "triangles": 720,
+          "vertices_blender": 366,
+          "bounds_gltf": {
+            "min": [
+              -1.2601757049560547,
+              0.0,
+              -0.8710026741027832
+            ],
+            "max": [
+              1.0616848468780518,
+              1.7865592241287231,
+              1.1238353252410889
+            ]
+          },
+          "distance_hint_m": 0
+        },
+        {
+          "level": 1,
+          "node": "rock_cluster_LOD1",
+          "file": "rock_cluster_lod1.glb",
+          "triangles": 120,
+          "vertices_blender": 66,
+          "bounds_gltf": {
+            "min": [
+              -1.105975866317749,
+              0.0,
+              -0.7845566868782043
+            ],
+            "max": [
+              1.0002247095108032,
+              1.681972622871399,
+              1.0527031421661377
+            ]
+          },
+          "distance_hint_m": 28
+        }
+      ],
+      "placement": {
+        "slope_limit_degrees": 26,
+        "scale_range": [
+          0.82,
+          1.18
+        ],
+        "yaw": "random 0..360 degrees",
+        "align": "world up for vegetation; terrain-normal tilt <=12 degrees for rocks",
+        "collision": "optional conservative proxy"
+      }
+    }
+  ],
+  "total_triangles_lod0": 23388,
+  "total_triangles_lod1": 3538
+}

@@ -41,7 +41,7 @@ test('dive start resets expedition state and snapshots do not alias saved arrays
 });
 
 test('movement follows yaw and pitch, normalizes diagonals, and sprint costs oxygen', () => {
-  const forward = playing(), diagonal = playing(), sprint = playing();
+  const forward = playing(), diagonal = playing({ y: -30 }), sprint = playing();
   advance(forward, 4, { forward: 1 });
   advance(diagonal, 4, { forward: 1, right: 1, up: 1 });
   advance(sprint, 4, { forward: 1, sprint: 1 });

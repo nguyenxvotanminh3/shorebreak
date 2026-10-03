@@ -1,0 +1,97 @@
+{
+  "asset": "shorebreak-diver-arms.glb",
+  "bytes": 981224,
+  "triangles": 16794,
+  "vertices": 8401,
+  "material_primitives": 1,
+  "skin_bones": 37,
+  "weight_sum_max_error": 1.1920928955078125e-07,
+  "finite_geometry": true,
+  "clips": {
+    "idle": {
+      "duration_seconds": 4.0,
+      "animation_channels": 111,
+      "seam_max_vertex_error_m": 0.0,
+      "bounds_min": [
+        -0.5644648663015984,
+        -0.6942095993556535,
+        -0.8091049154369505
+      ],
+      "bounds_max": [
+        0.5645009368539654,
+        -0.24148417674038247,
+        -0.22965252644535597
+      ],
+      "minimum_depth_all_vertices_m": 0.22965252644535597,
+      "minimum_depth_in_visible_frustum_m": 0.4932716572608541,
+      "max_vertices_in_central_18pct_view": 0
+    },
+    "scan": {
+      "duration_seconds": 3.0,
+      "animation_channels": 111,
+      "seam_max_vertex_error_m": 0.0,
+      "bounds_min": [
+        -0.5643443285846361,
+        -0.6923961448093834,
+        -0.9533355468441048
+      ],
+      "bounds_max": [
+        0.5489384986967089,
+        -0.25149468282189186,
+        -0.23665598604430763
+      ],
+      "minimum_depth_all_vertices_m": 0.23665598604430763,
+      "minimum_depth_in_visible_frustum_m": 0.4992323755450268,
+      "max_vertices_in_central_18pct_view": 0
+    },
+    "sprint": {
+      "duration_seconds": 1.6,
+      "animation_channels": 111,
+      "seam_max_vertex_error_m": 0.0,
+      "bounds_min": [
+        -0.5952805407466752,
+        -0.6996974495369921,
+        -0.8411959507356931
+      ],
+      "bounds_max": [
+        0.5952776975488465,
+        -0.05174722202423643,
+        -0.1989914132495301
+      ],
+      "minimum_depth_all_vertices_m": 0.1989914132495301,
+      "minimum_depth_in_visible_frustum_m": 0.41639930731906105,
+      "max_vertices_in_central_18pct_view": 0
+    },
+    "swim": {
+      "duration_seconds": 3.0,
+      "animation_channels": 111,
+      "seam_max_vertex_error_m": 0.0,
+      "bounds_min": [
+        -0.5942152788932896,
+        -0.6984501045055329,
+        -0.8441559368172206
+      ],
+      "bounds_max": [
+        0.5942132242413756,
+        -0.09195121638313586,
+        -0.1988675019018892
+      ],
+      "minimum_depth_all_vertices_m": 0.1988675019018892,
+      "minimum_depth_in_visible_frustum_m": 0.4351320047001551,
+      "max_vertices_in_central_18pct_view": 0
+    }
+  },
+  "sample_count_per_clip": 41,
+  "coordinate_space": "glTF camera-local X right, Y up, -Z forward; identity root transform",
+  "render_note": "Real Blender renders only. Game browser QA is integration responsibility.",
+  "passes": {
+    "triangle_budget": true,
+    "size_budget": true,
+    "bone_budget": true,
+    "primitive_budget": true,
+    "four_exact_clips": true,
+    "seamless_loops": true,
+    "safe_visible_near_plane": true,
+    "center_clear": true
+  }
+}
